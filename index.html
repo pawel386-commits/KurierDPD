@@ -36,7 +36,7 @@
     <style>
         :root { --dpd-red: #dc0032; }
         
-        /* Kluczowe dla iPhone: Wypełnienie Notcha */
+        /* Kluczowe dla iPhone: Wypełnienie Notcha i tła systemowego */
         html {
             background-color: var(--dpd-red);
             transition: background-color 0.3s ease;
@@ -73,12 +73,6 @@
         .view-hidden { display: none !important; }
         .map-dark-filter { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         
-        input[type="radio"]:checked + label {
-            border-color: #dc0032;
-            background-color: rgba(220, 0, 50, 0.05);
-            color: #dc0032;
-        }
-
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -128,7 +122,6 @@
         </div>
     </header>
 
-    <!-- Niewidoczne wideo dla podtrzymania ekranu -->
     <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
         <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
     </video>
@@ -151,7 +144,6 @@
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
 
-        <!-- Map View -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
@@ -186,7 +178,6 @@
                 <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95">
                     <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
                 </button>
-                <p class="text-center text-[9px] font-bold opacity-30 uppercase tracking-[0.3em]">Wersja 7.5 • DPD Kurier Log</p>
             </div>
         </div>
     </main>
@@ -219,6 +210,7 @@
         }));
 
         let isRecording = false;
+        let lastTranscript = "";
         let wakeLock = null;
         let currentView = 'list';
         let map = null, markersGroup = null;
@@ -243,16 +235,11 @@
             }
             updateThemeButtons();
             lucide.createIcons();
-            if (map) { 
-                const pane = document.querySelector('.leaflet-tile-pane');
-                if (pane) target === 'dark' ? pane.classList.add('map-dark-filter') : pane.classList.remove('map-dark-filter');
-            }
         }
 
         function setThemeMode(mode) {
             config.theme = mode;
             applySettings();
-            refreshTheme();
         }
 
         function updateThemeButtons() {
@@ -293,6 +280,7 @@
 
             recognition.onstart = () => {
                 isRecording = true;
+                lastTranscript = "";
                 requestWakeLock();
                 document.getElementById('micBtn').classList.add('pulse-red');
                 document.getElementById('micIcon').setAttribute('data-lucide', 'circle-stop');
@@ -304,16 +292,27 @@
             recognition.onresult = (e) => {
                 let interim = '';
                 for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    const transcript = e.results[i][0].transcript;
                     if (e.results[i].isFinal) {
-                        addEntry(e.results[i][0].transcript);
+                        lastTranscript = ""; // Reset since it's final
+                        addEntry(transcript);
                     } else {
-                        interim = e.results[i][0].transcript;
+                        interim = transcript;
+                        lastTranscript = transcript;
                     }
                 }
                 document.getElementById('liveText').textContent = interim || "Słucham...";
             };
 
-            recognition.onend = () => stopUIRecording();
+            recognition.onend = () => {
+                // FALLBACK: If recording ended but we have an interim transcript not yet processed
+                if (lastTranscript.length > 1) {
+                    addEntry(lastTranscript);
+                    lastTranscript = "";
+                }
+                stopUIRecording();
+            };
+            
             recognition.onerror = () => stopUIRecording();
         }
 
@@ -334,8 +333,10 @@
         // --- CORE LOGIC ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
-            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jedenaście': '11', 'dwanaście': '12', 'sto': '100' };
+            // Basic number replacement
+            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jedenaście': '11', 'dwanaście': '12' };
             Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
+            // Advanced street/house logic
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
             t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
             return t;
@@ -345,7 +346,8 @@
             if (!text || text.trim().length < 2) return;
             
             const keyword = config.stopWord.toLowerCase().trim();
-            const splitIndex = text.toLowerCase().indexOf(keyword);
+            const lowerText = text.toLowerCase();
+            const splitIndex = lowerText.indexOf(keyword);
             
             let address = "", note = "";
             if (splitIndex !== -1) {
@@ -356,29 +358,35 @@
             }
 
             address = formatPolishNumbers(address);
+            if (address.length < 2) return;
+            
             address = address.charAt(0).toUpperCase() + address.slice(1);
-            if (note) note = note.charAt(0).toUpperCase() + note.slice(1);
+            if (note) {
+                note = note.trim();
+                if (note.startsWith('.') || note.startsWith(',')) note = note.substring(1).trim();
+                note = note.charAt(0).toUpperCase() + note.slice(1);
+            }
 
-            const entry = {
-                id: Date.now(),
+            const entryId = Date.now();
+            addresses.unshift({
+                id: entryId,
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
                 address, note, lat: null, lng: null
-            };
+            });
 
-            addresses.unshift(entry);
             saveAndRender();
-            showToast("Stop zapisany!", "check-circle");
+            showToast("Stop dodany!", "check-circle");
 
             if (config.gpsEnabled && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
-                    const i = addresses.findIndex(a => a.id === entry.id);
-                    if (i !== -1) {
-                        addresses[i].lat = p.coords.latitude;
-                        addresses[i].lng = p.coords.longitude;
+                    const idx = addresses.findIndex(a => a.id === entryId);
+                    if (idx !== -1) {
+                        addresses[idx].lat = p.coords.latitude;
+                        addresses[idx].lng = p.coords.longitude;
                         localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
                     }
-                }, null, { timeout: 1500 });
+                }, null, { timeout: 2000 });
             }
         }
 
@@ -386,7 +394,13 @@
             localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
             document.getElementById('stopCounter').textContent = addresses.length;
             const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
-            if (addresses.length === 0) { listEl.innerHTML = ''; emptyEl.classList.remove('hidden'); return; }
+            
+            if (addresses.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+            
             emptyEl.classList.add('hidden');
             listEl.innerHTML = addresses.map(item => `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
@@ -397,7 +411,7 @@
                         </div>
                         <button onclick="deleteAddress(${item.id})" class="text-gray-400 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
-                    ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg flex items-start gap-2 border border-gray-100 dark:border-zinc-800 text-left">
+                    ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left">
                         <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug">${item.note}</p>
                     </div>` : ''}
                 </li>`).join('');
@@ -470,6 +484,11 @@
         document.body.addEventListener('click', () => requestWakeLock(), { once: true });
         initSettingsUI(); saveAndRender();
         setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
+        
+        // Update clock date every minute
+        setInterval(() => {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }, 10000);
     </script>
 </body>
 </html>
