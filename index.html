@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kurier Log">
     
-    <!-- Kolor paska systemowego -->
+    <!-- Kolor paska systemowego i obszaru Notch -->
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +36,7 @@
     <style>
         :root { --dpd-red: #dc0032; }
         
-        /* Kluczowe dla iPhone: Wypełnienie Notcha i tła systemowego */
+        /* Kluczowe dla iPhone: Wymuszenie czerwonego tła dla Notcha */
         html {
             background-color: var(--dpd-red);
             transition: background-color 0.3s ease;
@@ -55,6 +55,7 @@
 
         .dark body { background-color: #000000; }
         
+        /* Margines górny dla bezpiecznej strefy (Notch/Dynamic Island) */
         .header-safe-area {
             padding-top: env(safe-area-inset-top);
             background-color: var(--dpd-red);
@@ -122,12 +123,13 @@
         </div>
     </header>
 
+    <!-- Hack dla podtrzymania ekranu -->
     <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
         <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
     </video>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
-        <!-- List View -->
+        <!-- Widok Listy -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -138,8 +140,7 @@
             </div>
             <div id="emptyState" class="text-center py-20 text-gray-400 hidden">
                 <i data-lucide="mic" class="w-16 h-16 mx-auto mb-4 opacity-10"></i>
-                <p class="font-medium text-sm">Lista jest pusta.</p>
-                <p id="emptyInstruction" class="text-[10px]">Kliknij przycisk i podyktuj adres.</p>
+                <p class="font-medium text-sm text-balance">Lista jest pusta. Kliknij mikrofon i podyktuj adres.</p>
             </div>
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
@@ -148,7 +149,7 @@
             <div id="map"></div>
         </div>
 
-        <!-- Settings View -->
+        <!-- Widok Ustawień -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40">
             <div class="header-safe-area"></div>
             <div class="flex justify-between items-center mb-8">
@@ -162,7 +163,7 @@
                         <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
                         <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                 </section>
@@ -182,7 +183,7 @@
         </div>
     </main>
 
-    <!-- Bottom Panel -->
+    <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -197,13 +198,13 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- Powiadomienie Toast -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
         <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-dpd-red"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // --- DATA ---
+        // --- DANE I KONFIGURACJA ---
         let addresses = JSON.parse(localStorage.getItem('dpd_logs_v7') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v4') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true
@@ -217,7 +218,7 @@
 
         lucide.createIcons();
 
-        // --- THEME ---
+        // --- MOTYW ---
         function refreshTheme() {
             let target = config.theme;
             if (config.theme === 'auto') {
@@ -259,7 +260,7 @@
             applySettings();
         }
 
-        // --- WAKE LOCK ---
+        // --- BLOKADA EKRANU ---
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
@@ -269,7 +270,7 @@
             document.getElementById('wakeText').textContent = 'Blokada: WŁ';
         }
 
-        // --- SPEECH ---
+        // --- ROZPOZNAWANIE MOWY ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -294,7 +295,7 @@
                 for (let i = e.resultIndex; i < e.results.length; ++i) {
                     const transcript = e.results[i][0].transcript;
                     if (e.results[i].isFinal) {
-                        lastTranscript = ""; // Reset since it's final
+                        lastTranscript = ""; 
                         addEntry(transcript);
                     } else {
                         interim = transcript;
@@ -305,7 +306,6 @@
             };
 
             recognition.onend = () => {
-                // FALLBACK: If recording ended but we have an interim transcript not yet processed
                 if (lastTranscript.length > 1) {
                     addEntry(lastTranscript);
                     lastTranscript = "";
@@ -326,22 +326,54 @@
         }
 
         function toggleRecognition() {
-            if (!recognition) return showToast("Brak mowy");
+            if (!recognition) return showToast("Mowa nieobsługiwana");
             isRecording ? recognition.stop() : recognition.start();
         }
 
-        // --- CORE LOGIC ---
+        // --- FORMATOWANIE LICZB (POPRAWKA "8 NAŚCIE") ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
-            // Basic number replacement
-            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jedenaście': '11', 'dwanaście': '12' };
-            Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
-            // Advanced street/house logic
+            
+            // 1. Połącz rozbite przyrostki (np. "8 naście" -> "8naście", "osiem naście" -> "osiemnaście")
+            t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
+
+            // 2. Mapa podstawowych wyrazów na cyfry
+            const numMap = { 
+                'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 
+                'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 
+                'dziesięć': '10'
+            };
+            Object.keys(numMap).forEach(word => { 
+                t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); 
+            });
+
+            // 3. Obsługa przyrostków dla cyfr (np. "8naście" -> "18", "2dzieścia" -> "20")
+            // naście (11-19)
+            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13')
+                 .replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16')
+                 .replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
+                 .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13')
+                 .replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16')
+                 .replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
+
+            // dziesiątki
+            t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40')
+                 .replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70')
+                 .replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
+
+            // 4. Połącz dziesiątki z jednościami (np. "20 3" -> "23")
+            t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => {
+                return parseInt(p1) + parseInt(p2);
+            });
+
+            // 5. Adresy (przez, łamane)
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
             t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
+            
             return t;
         }
 
+        // --- DODAWANIE WPISU ---
         function addEntry(text) {
             if (!text || text.trim().length < 2) return;
             
@@ -407,18 +439,18 @@
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
                             <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
-                            <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight">${item.address}</p>
+                            <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance">${item.address}</p>
                         </div>
                         <button onclick="deleteAddress(${item.id})" class="text-gray-400 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                     ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left">
-                        <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug">${item.note}</p>
+                        <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance">${item.note}</p>
                     </div>` : ''}
                 </li>`).join('');
             lucide.createIcons();
         }
 
-        // --- UI ACTIONS ---
+        // --- AKCJE INTERFEJSU ---
         function initSettingsUI() {
             document.getElementById('setCourierName').value = config.name;
             document.getElementById('setStopWord').value = config.stopWord;
@@ -485,7 +517,6 @@
         initSettingsUI(); saveAndRender();
         setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
         
-        // Update clock date every minute
         setInterval(() => {
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }, 10000);
