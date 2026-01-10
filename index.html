@@ -417,7 +417,7 @@
                         addresses[idx].lng = p.coords.longitude;
                         cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude };
                         localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
-                        saveAndRender(); // Update UI with location icon and refresh map
+                        saveAndRender(); 
                     }
                 }, null, { timeout: 3000, enableHighAccuracy: true });
             }
@@ -430,18 +430,22 @@
             
             if (addresses.length === 0) {
                 listEl.innerHTML = '';
-                emptyEl.classList.remove('hidden');
+                emptyState.classList.remove('hidden');
                 return;
             }
             
-            emptyEl.classList.add('hidden');
+            emptyState.classList.add('hidden');
             listEl.innerHTML = addresses.map(item => `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
-                                ${item.lat ? '<i data-lucide="map-pin" class="w-3 h-3 text-blue-500"></i>' : ''}
+                                ${item.lat !== null ? `
+                                    <svg class="w-3 h-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                ` : ''}
                             </div>
                             <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                         </div>
