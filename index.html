@@ -362,7 +362,7 @@
             }
         }
 
-        // --- ROZPOZNAWANIE MOWY ---
+        // --- SPEECH RECOGNITION ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -657,9 +657,10 @@
         function exportSpecificDay(date) {
             const dayStops = addresses.filter(a => a.date === date);
             if (dayStops.length === 0) return;
-            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + dayStops.map(r => {
+            // DODANO KOLUMNY GPS: Szerokość;Długość
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + dayStops.map(r => {
                 const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
-                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0}`;
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0};${r.lat || ''};${r.lng || ''}`;
             }).join("\n");
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${date.replace(/\./g, '_')}.csv`; link.click();
@@ -689,7 +690,7 @@
                 listEl.innerHTML = todayAddresses.map(item => {
                     const isPickup = item.type === 'pickup';
                     return `
-                    <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
+                    <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2 text-left">
                         <div class="flex justify-between items-start text-left">
                             <div class="flex-1 pr-2">
                                 <div class="flex items-center gap-2 flex-wrap">
@@ -780,7 +781,11 @@
             if (addresses.length === 0) return;
             const today = new Date().toLocaleDateString('pl-PL');
             const todayStops = addresses.filter(a => a.date === today);
-            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + todayStops.map(r => `${r.date};${r.time};${r.type === 'pickup' ? 'Odbiór' : 'Doręczenie'};"${r.address}";"${r.note || ''}";${r.tip || 0}`).join("\n");
+            // DODANO KOLUMNY GPS: Szerokość;Długość
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + todayStops.map(r => {
+                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0};${r.lat || ''};${r.lng || ''}`;
+            }).join("\n");
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${today}.csv`; link.click();
         }
