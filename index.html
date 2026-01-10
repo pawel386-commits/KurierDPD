@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kurier Log">
     
-    <!-- Kolor paska systemowego i obszaru Notch -->
+    <!-- System Theme Color - Controls Notch area on iOS -->
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +36,7 @@
     <style>
         :root { --dpd-red: #dc0032; }
         
-        /* Kluczowe dla iPhone: Wymuszenie czerwonego tła dla Notcha */
+        /* Force red background behind Notch on iOS */
         html {
             background-color: var(--dpd-red);
             transition: background-color 0.3s ease;
@@ -55,7 +55,6 @@
 
         .dark body { background-color: #000000; }
         
-        /* Margines górny dla bezpiecznej strefy (Notch/Dynamic Island) */
         .header-safe-area {
             padding-top: env(safe-area-inset-top);
             background-color: var(--dpd-red);
@@ -114,7 +113,7 @@
                 </div>
             </div>
             <div class="mt-4 bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10">
-                <span class="text-xs font-bold uppercase opacity-80 uppercase tracking-tighter">Dzisiejsza suma:</span>
+                <span class="text-xs font-bold uppercase opacity-80 uppercase tracking-tighter text-left">Dzisiejsza suma:</span>
                 <div class="flex items-baseline gap-1">
                     <span id="stopCounter" class="text-3xl font-black leading-none">0</span>
                     <span class="text-[10px] font-bold opacity-60 uppercase">Stop</span>
@@ -123,15 +122,15 @@
         </div>
     </header>
 
-    <!-- Hack dla podtrzymania ekranu -->
+    <!-- Background video hack to keep screen awake -->
     <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
         <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
     </video>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
-        <!-- Widok Listy -->
+        <!-- List View -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
-            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
+            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm text-left">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
@@ -145,12 +144,12 @@
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
 
-        <!-- Widok Mapy -->
+        <!-- Map View -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
-        <!-- Widok Ustawień -->
+        <!-- Settings View -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40">
             <div class="header-safe-area"></div>
             <div class="flex justify-between items-center mb-8">
@@ -164,11 +163,11 @@
                         <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Słowo-klucz notatki</label>
                         <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                 </section>
-                <section class="grid grid-cols-3 gap-2">
+                <section class="grid grid-cols-3 gap-2 text-left">
                     <button id="btnLight" onclick="setThemeMode('light')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Jasny</button>
                     <button id="btnDark" onclick="setThemeMode('dark')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Ciemny</button>
                     <button id="btnAuto" onclick="setThemeMode('auto')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Auto</button>
@@ -177,14 +176,14 @@
                     <span class="text-sm font-bold">Używaj GPS</span>
                     <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
                 </label>
-                <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95">
+                <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
                     <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
                 </button>
             </div>
         </div>
     </main>
 
-    <!-- Panel Dolny -->
+    <!-- Bottom Panel -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -192,20 +191,20 @@
                 <button onclick="clearData()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red"><i data-lucide="trash-2" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase">Reset</span></button>
                 <div class="relative -top-10 text-center">
                     <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900"><i data-lucide="mic" id="micIcon" class="w-10 h-10"></i></button>
-                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Dyktuj...</div>
+                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Słucham...</div>
                 </div>
-                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase">Raport</span></button>
+                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase text-left">Raport</span></button>
             </div>
         </div>
     </div>
 
-    <!-- Powiadomienie Toast -->
+    <!-- Toast Notification -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
         <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-dpd-red"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // --- DANE I KONFIGURACJA ---
+        // --- DATA & CONFIG ---
         let addresses = JSON.parse(localStorage.getItem('dpd_logs_v7') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v4') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true
@@ -216,10 +215,11 @@
         let wakeLock = null;
         let currentView = 'list';
         let map = null, markersGroup = null;
+        let cachedGps = null; // Background GPS caching
 
         lucide.createIcons();
 
-        // --- MOTYW ---
+        // --- THEME ---
         function refreshTheme() {
             let target = config.theme;
             if (config.theme === 'auto') {
@@ -237,14 +237,6 @@
             }
             updateThemeButtons();
             lucide.createIcons();
-            
-            if (map) { 
-                const pane = document.querySelector('.leaflet-tile-pane');
-                if (pane) {
-                    if (target === 'dark') pane.classList.add('map-dark-filter');
-                    else pane.classList.remove('map-dark-filter');
-                }
-            }
         }
 
         function setThemeMode(mode) {
@@ -269,7 +261,7 @@
             applySettings();
         }
 
-        // --- BLOKADA EKRANU ---
+        // --- WAKE LOCK & GPS PRE-FETCH ---
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
@@ -279,7 +271,17 @@
             document.getElementById('wakeText').textContent = 'Blokada: WŁ';
         }
 
-        // --- ROZPOZNAWANIE MOWY ---
+        function prefetchGps() {
+            if (config.gpsEnabled && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => { cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude }; },
+                    null,
+                    { timeout: 5000, enableHighAccuracy: true }
+                );
+            }
+        }
+
+        // --- SPEECH RECOGNITION ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -292,6 +294,7 @@
                 isRecording = true;
                 lastTranscript = "";
                 requestWakeLock();
+                prefetchGps(); // Start GPS lookup while user is speaking
                 document.getElementById('micBtn').classList.add('pulse-red');
                 document.getElementById('micIcon').setAttribute('data-lucide', 'circle-stop');
                 document.getElementById('livePreview').classList.remove('hidden');
@@ -335,59 +338,37 @@
         }
 
         function toggleRecognition() {
-            if (!recognition) return showToast("Mowa nieobsługiwana");
+            if (!recognition) return showToast("Brak mowy");
             isRecording ? recognition.stop() : recognition.start();
         }
 
-        // --- FORMATOWANIE LICZB ---
+        // --- NUMBER FORMATTING ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
+            // Connect broken numbers (e.g., "8 naście" -> "8naście")
             t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
+
             const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
             Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
-            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19');
+            
+            // Teen numbers
+            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
+                 .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13').replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16').replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
+
+            // Decimal numbers
             t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40').replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70').replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
+            
+            // Sum decimal + single (e.g., "20 3" -> "23")
             t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => parseInt(p1) + parseInt(p2));
+
+            // Address house number slashes
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
             t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
+            
             return t;
         }
 
-        // --- MAP ENGINE ---
-        function initMap() {
-            if (map) return;
-            map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OSM'
-            }).addTo(map);
-            markersGroup = L.layerGroup().addTo(map);
-        }
-
-        function renderMarkers() {
-            if (!markersGroup || !map) return;
-            markersGroup.clearLayers();
-            const validPoints = addresses.filter(a => a.lat && a.lng);
-            if (validPoints.length === 0) return;
-            
-            const bounds = L.latLngBounds();
-            validPoints.forEach(p => {
-                const marker = L.circleMarker([p.lat, p.lng], { 
-                    radius: 8, 
-                    fillColor: "#dc0032", 
-                    color: "#fff", 
-                    weight: 2, 
-                    opacity: 1, 
-                    fillOpacity: 0.8 
-                }).addTo(markersGroup);
-                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
-                bounds.extend([p.lat, p.lng]);
-            });
-            
-            // Dopasuj widok tylko jeśli dodajemy nowy punkt lub otwieramy mapę pierwszy raz
-            map.fitBounds(bounds, { padding: [50, 50] });
-        }
-
-        // --- DODAWANIE WPISU ---
+        // --- ENTRY LOGIC ---
         function addEntry(text) {
             if (!text || text.trim().length < 2) return;
             
@@ -414,27 +395,31 @@
             }
 
             const entryId = Date.now();
-            addresses.unshift({
+            const entry = {
                 id: entryId,
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
-                address, note, lat: null, lng: null
-            });
+                address, note, 
+                lat: cachedGps ? cachedGps.lat : null, 
+                lng: cachedGps ? cachedGps.lng : null
+            };
 
+            addresses.unshift(entry);
             saveAndRender();
             showToast("Stop dodany!", "check-circle");
 
+            // Final GPS update if cache was empty or outdated
             if (config.gpsEnabled && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     const idx = addresses.findIndex(a => a.id === entryId);
                     if (idx !== -1) {
                         addresses[idx].lat = p.coords.latitude;
                         addresses[idx].lng = p.coords.longitude;
+                        cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude };
                         localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
-                        // Odśwież mapę po otrzymaniu GPS
-                        if (currentView === 'map') renderMarkers();
+                        saveAndRender(); // Update UI with location icon and refresh map
                     }
-                }, null, { timeout: 2000 });
+                }, null, { timeout: 3000, enableHighAccuracy: true });
             }
         }
 
@@ -454,7 +439,10 @@
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
-                            <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
+                                ${item.lat ? '<i data-lucide="map-pin" class="w-3 h-3 text-blue-500"></i>' : ''}
+                            </div>
                             <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                         </div>
                         <button onclick="deleteAddress(${item.id})" class="text-gray-400 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
@@ -464,11 +452,35 @@
                     </div>` : ''}
                 </li>`).join('');
             lucide.createIcons();
-            // Odśwież znaczniki na mapie przy każdej zmianie listy
             if (map && currentView === 'map') renderMarkers();
         }
 
-        // --- AKCJE INTERFEJSU ---
+        // --- MAP ENGINE ---
+        function initMap() {
+            if (map) return;
+            map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
+        }
+
+        function renderMarkers() {
+            if (!markersGroup || !map) return;
+            markersGroup.clearLayers();
+            const validPoints = addresses.filter(a => a.lat && a.lng);
+            if (validPoints.length === 0) return;
+            
+            const bounds = L.latLngBounds();
+            validPoints.forEach(p => {
+                const marker = L.circleMarker([p.lat, p.lng], { 
+                    radius: 8, fillColor: "#dc0032", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 
+                }).addTo(markersGroup);
+                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
+                bounds.extend([p.lat, p.lng]);
+            });
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+
+        // --- UI ACTIONS ---
         function initSettingsUI() {
             document.getElementById('setCourierName').value = config.name;
             document.getElementById('setStopWord').value = config.stopWord;
@@ -495,15 +507,11 @@
             document.getElementById('bottomBar').classList.toggle('translate-y-40', view === 'settings');
             document.getElementById('headerActions').classList.toggle('opacity-0', view === 'settings');
             currentView = view;
-            
             if (view === 'map') { 
                 initMap(); 
                 document.getElementById('toggleText').textContent = 'Lista'; 
                 document.getElementById('toggleIcon').setAttribute('data-lucide', 'list');
-                setTimeout(() => {
-                    map.invalidateSize();
-                    renderMarkers(); // Wymuś renderowanie znaczników przy wejściu na mapę
-                }, 150);
+                setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 150);
             } else {
                 document.getElementById('toggleText').textContent = 'Mapa'; 
                 document.getElementById('toggleIcon').setAttribute('data-lucide', 'map');
@@ -528,10 +536,9 @@
 
         function shareApp() { navigator.share ? navigator.share({ title: 'Licznik Stopów DPD', url: window.location.href }) : showToast("Skopiuj link"); }
 
-        document.body.addEventListener('click', () => requestWakeLock(), { once: true });
+        document.body.addEventListener('click', () => { requestWakeLock(); prefetchGps(); }, { once: true });
         initSettingsUI(); saveAndRender();
         setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
-        
         setInterval(() => {
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }, 10000);
