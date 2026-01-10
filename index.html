@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kurier Log">
     
-    <!-- Kolor paska systemowego i Notcha -->
+    <!-- Wymuszenie koloru Notcha w Safari -->
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,10 +36,10 @@
     <style>
         :root { --dpd-red: #dc0032; }
         
-        /* Wymuszenie czerwonego tła dla obszaru Notch na iOS */
+        /* Kluczowe dla iPhone: Notch musi być czerwony */
         html {
             background-color: var(--dpd-red);
-            height: 100%;
+            transition: background-color 0.3s ease;
         }
 
         html.dark {
@@ -52,17 +52,17 @@
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
-            height: 100%;
         }
 
         .dark body { background-color: #000000; }
         
-        .header-safe-area {
+        .safe-top {
             padding-top: env(safe-area-inset-top);
-            background-color: var(--dpd-red);
         }
 
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
 
         .pulse-red { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
@@ -75,20 +75,14 @@
         .view-hidden { display: none !important; }
         .map-dark-filter { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
         
-        input[type="radio"]:checked + label {
-            border-color: #dc0032;
-            background-color: rgba(220, 0, 50, 0.05);
-            color: #dc0032;
-        }
-
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="text-dpd-dark dark:text-gray-100 flex flex-col overflow-hidden text-left transition-colors duration-300">
+<body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
-    <!-- Header -->
+    <!-- Header rozciągnięty pod Notch -->
     <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none">
-        <div class="header-safe-area"></div>
+        <div class="safe-top"></div>
         <div class="p-4 pt-2 pb-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3 text-left">
@@ -108,7 +102,7 @@
                         <div id="currentDate" class="text-[10px] font-bold opacity-90 tracking-wider whitespace-nowrap">--.--.----</div>
                     </div>
                     <div class="flex gap-2">
-                        <button id="viewToggle" onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 rounded-full uppercase shadow-md active:scale-95 transition-all">
+                        <button onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 rounded-full uppercase shadow-md active:scale-95 transition-all">
                             <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5"></i> <span id="toggleText">Mapa</span>
                         </button>
                         <button onclick="cycleThemeManual()" class="bg-black/20 p-1.5 rounded-full border border-white/10 active:scale-90 transition-all flex items-center justify-center">
@@ -121,10 +115,10 @@
                 </div>
             </div>
             <div class="mt-4 bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10">
-                <span class="text-xs font-bold uppercase opacity-80">Suma dzisiaj:</span>
+                <span class="text-xs font-bold uppercase opacity-80">Odwiedzone stopy:</span>
                 <div class="flex items-baseline gap-1">
                     <span id="stopCounter" class="text-3xl font-black">0</span>
-                    <span class="text-[10px] font-bold opacity-60">STOP</span>
+                    <span class="text-[10px] font-bold opacity-60 uppercase tracking-tighter">Suma</span>
                 </div>
             </div>
         </div>
@@ -135,7 +129,7 @@
     </video>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
-        <!-- List View -->
+        <!-- Widok Listy -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1 transition-opacity">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -147,18 +141,19 @@
             <div id="emptyState" class="text-center py-20 text-gray-400 hidden">
                 <i data-lucide="mic" class="w-16 h-16 mx-auto mb-4 opacity-10"></i>
                 <p class="font-medium text-sm">Brak zapisanych stopów.</p>
-                <p id="emptyInstruction" class="text-[10px]">Kliknij mikrofon i dyktuj.</p>
+                <p id="emptyInstruction" class="text-[10px]">Kliknij mikrofon i dyktuj adres.</p>
             </div>
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
 
+        <!-- Widok Mapy -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
-        <!-- Settings View -->
+        <!-- Widok Ustawień -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40">
-            <div style="height: env(safe-area-inset-top);"></div>
+            <div class="safe-top"></div>
             <div class="flex justify-between items-center mb-8">
                 <div class="flex items-center gap-2 text-left">
                     <i data-lucide="settings-2" class="w-6 h-6 text-dpd-red"></i>
@@ -170,43 +165,43 @@
             </div>
             <div class="space-y-8">
                 <section>
-                    <label class="text-[10px] font-black uppercase text-gray-400 block mb-3 text-left">Profil</label>
+                    <label class="text-[10px] font-black uppercase text-gray-400 block mb-3 text-left">Twoje Dane</label>
                     <div class="space-y-4">
                         <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                             <label class="text-[10px] font-bold text-gray-500 block mb-1">Twoje Imię</label>
+                             <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
                              <input type="text" id="setCourierName" placeholder="Np. Jan Kowalski" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                         </div>
                         <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Słowo wyzwalające notatkę</label>
+                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło Notatki (słowo-klucz)</label>
                             <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                         </div>
                     </div>
                 </section>
                 <section>
-                    <label class="text-[10px] font-black uppercase text-gray-400 block mb-3 text-left">Widok</label>
+                    <label class="text-[10px] font-black uppercase text-gray-400 block mb-3 text-left">Motyw</label>
                     <div class="grid grid-cols-3 gap-2">
                         <input type="radio" name="themeMode" id="themeLight" value="light" class="hidden" onchange="applySettings()">
                         <label for="themeLight" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Jasny</label>
                         <input type="radio" name="themeMode" id="themeDark" value="dark" class="hidden" onchange="applySettings()">
                         <label for="themeDark" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Ciemny</label>
                         <input type="radio" name="themeMode" id="themeAuto" value="auto" class="hidden" onchange="applySettings()">
-                        <label for="themeAuto" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all text-center leading-tight">Auto<br><span class="text-[8px] opacity-50 font-normal">Słońce</span></label>
+                        <label for="themeAuto" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all text-center leading-tight">Auto</label>
                     </div>
                 </section>
                 <section>
                     <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <span class="text-sm font-bold">Zapisuj pozycję GPS</span>
+                        <span class="text-sm font-bold">Używaj GPS</span>
                         <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
                     </label>
                 </section>
                 <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95">
-                    <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
+                    <i data-lucide="share-2" class="w-4 h-4"></i> Wyślij koledze
                 </button>
             </div>
         </div>
     </main>
 
-    <!-- Bottom Action -->
+    <!-- Dolny Panel Sterowania -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30 transition-transform duration-300">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -215,15 +210,15 @@
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
                     <span class="text-[10px] font-bold uppercase">Reset</span>
                 </button>
-                <div class="relative -top-8 text-center">
+                <div class="relative -top-10 text-center">
                     <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900">
                         <i data-lucide="mic" id="micIcon" class="w-10 h-10"></i>
                     </button>
-                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Nagrywam</div>
+                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Słucham...</div>
                 </div>
                 <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark">
                     <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">Excel</span>
+                    <span class="text-[10px] font-bold uppercase">Raport</span>
                 </button>
             </div>
         </div>
@@ -236,7 +231,6 @@
     </div>
 
     <script>
-        // --- DATA & CONFIG ---
         let addresses = JSON.parse(localStorage.getItem('dpd_logs_v7') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v3') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true
@@ -287,9 +281,7 @@
             refreshTheme();
         }
 
-        // --- WAKE LOCK ENGINE ---
-        const video = document.getElementById('noSleepVideo');
-        
+        // --- WAKE LOCK ---
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
@@ -298,39 +290,8 @@
                     document.getElementById('wakeText').textContent = 'Blokada: WŁ';
                 } catch (err) {}
             }
+            const video = document.getElementById('noSleepVideo');
             video.play().catch(() => {});
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-        });
-
-        // --- SPEECH FORMATTING ---
-        function formatPolishNumbers(text) {
-            let t = text.toLowerCase().trim();
-            t = t.replace(/(\w+)\s+naście/g, '$1naście').replace(/(\w+)\s+dzieści/g, '$1dzieści').replace(/(\w+)\s+dziesiąt/g, '$1dziesiąt');
-            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jedenaście': '11', 'dwanaście': '12', 'trzynaście': '13', 'czternaście': '14', 'piętnaście': '15', 'szesnaście': '16', 'siedemnaście': '17', 'osiemnaście': '18', 'dziewiętnaście': '19', 'dwadzieścia': '20', 'trzydzieści': '30', 'czterdzieści': '40', 'pięćdziesiąt': '50', 'sześćdziesiąt': '60', 'siedemdziesiąt': '70', 'osiemdziesiąt': '80', 'dziewięćdziesiąt': '90', 'sto': '100' };
-            Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
-            t = t.replace(/\b(20|30|40|50|60|70|80|90)\s+([1-9])\b/g, (m, p1, p2) => parseInt(p1) + parseInt(p2));
-            t = t.replace(/(\d+[a-z]?)\s*(przez|łamane przez|łamane na|mieszkania|lokalu|mieszkanie)\s*(\d+[a-z]?)/g, '$1/$3');
-            t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
-            return t;
-        }
-
-        function splitAddressAndNote(rawText) {
-            // Elastyczne szukanie słowa kluczowego (ignoruje kropki i wielkość liter)
-            const keyword = config.stopWord.toLowerCase().trim();
-            const regex = new RegExp(`\\s+${keyword}[\\s\\.]*`, 'i');
-            const match = rawText.match(regex);
-
-            if (match) {
-                const index = match.index;
-                let addressPart = formatPolishNumbers(rawText.substring(0, index).trim());
-                let notePart = rawText.substring(index + match[0].length).trim();
-                return { address: addressPart, note: notePart };
-            } else {
-                return { address: formatPolishNumbers(rawText), note: "" };
-            }
         }
 
         // --- SPEECH RECOGNITION ---
@@ -360,7 +321,6 @@
                         if (result.trim().length > 1) {
                             addEntry(result);
                         }
-                        recognition.stop(); 
                     } else { 
                         interim = e.results[i][0].transcript; 
                     } 
@@ -369,10 +329,7 @@
             };
 
             recognition.onend = () => stopUIRecording();
-            recognition.onerror = (e) => {
-                console.error("Speech error:", e.error);
-                stopUIRecording();
-            };
+            recognition.onerror = () => stopUIRecording();
         }
 
         function stopUIRecording() { 
@@ -385,79 +342,75 @@
         }
 
         function toggleRecognition() { 
-            if (!recognition) return showToast("Brak mowy");
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
+            if (!recognition) return showToast("Mowa nieobsługiwana");
+            if (isRecording) recognition.stop(); else recognition.start();
+        }
+
+        function formatPolishNumbers(text) {
+            let t = text.toLowerCase().trim();
+            t = t.replace(/(\w+)\s+naście/g, '$1naście').replace(/(\w+)\s+dzieści/g, '$1dzieści').replace(/(\w+)\s+dziesiąt/g, '$1dziesiąt');
+            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jedenaście': '11', 'dwanaście': '12', 'trzynaście': '13', 'czternaście': '14', 'piętnaście': '15', 'szesnaście': '16', 'siedemnaście': '17', 'osiemnaście': '18', 'dziewiętnaście': '19', 'dwadzieścia': '20', 'trzydzieści': '30', 'czterdzieści': '40', 'pięćdziesiąt': '50', 'sześćdziesiąt': '60', 'siedemdziesiąt': '70', 'osiemdziesiąt': '80', 'dziewięćdziesiąt': '90', 'sto': '100' };
+            Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
+            t = t.replace(/\b(20|30|40|50|60|70|80|90)\s+([1-9])\b/g, (m, p1, p2) => parseInt(p1) + parseInt(p2));
+            // Agresywna zamiana "przez" na "/" z usuwaniem kropek i spacji
+            t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
+            t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
+            return t;
         }
 
         function addEntry(text) {
-            const data = splitAddressAndNote(text);
-            let address = data.address.charAt(0).toUpperCase() + data.address.slice(1);
-            let note = data.note ? data.note.charAt(0).toUpperCase() + data.note.slice(1) : "";
-
-            // Bezpieczny GPS z automatycznym pominięciem po 3 sekundach
-            if (config.gpsEnabled && navigator.geolocation) {
-                let gpsResolved = false;
-                const gpsTimeout = setTimeout(() => {
-                    if (!gpsResolved) {
-                        gpsResolved = true;
-                        saveEntry(address, note, null, null);
-                    }
-                }, 3000);
-
-                navigator.geolocation.getCurrentPosition(
-                    p => {
-                        if (!gpsResolved) {
-                            gpsResolved = true;
-                            clearTimeout(gpsTimeout);
-                            saveEntry(address, note, p.coords.latitude, p.coords.longitude);
-                        }
-                    },
-                    () => {
-                        if (!gpsResolved) {
-                            gpsResolved = true;
-                            clearTimeout(gpsTimeout);
-                            saveEntry(address, note, null, null);
-                        }
-                    },
-                    { timeout: 2500, enableHighAccuracy: true }
-                );
+            const keyword = config.stopWord.toLowerCase().trim();
+            const regex = new RegExp(`\\s+${keyword}[\\s\\.]*`, 'i');
+            const match = text.match(regex);
+            
+            let address = "", note = "";
+            if (match) {
+                address = formatPolishNumbers(text.substring(0, match.index).trim());
+                note = text.substring(match.index + match[0].length).trim();
             } else {
-                saveEntry(address, note, null, null);
+                address = formatPolishNumbers(text);
             }
-        }
+            
+            if (address.length < 2) return;
+            address = address.charAt(0).toUpperCase() + address.slice(1);
+            if (note) note = note.charAt(0).toUpperCase() + note.slice(1);
 
-        function saveEntry(address, note, lat, lng) {
+            // Zapisujemy od razu, GPS pobierzemy jeśli się uda szybko
+            const entryId = Date.now();
             addresses.unshift({ 
-                id: Date.now(), 
+                id: entryId, 
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }), 
                 date: new Date().toLocaleDateString('pl-PL'), 
-                address, note, lat, lng 
+                address, note, lat: null, lng: null 
             });
-            saveAndRender(); 
-            showToast("Stop zapisany!", "check-circle", "text-green-400");
+            saveAndRender();
+            showToast("Stop zapisany!", "check-circle");
+
+            // GPS w tle (nie blokuje zapisu)
+            if (config.gpsEnabled && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    const idx = addresses.findIndex(a => a.id === entryId);
+                    if (idx !== -1) {
+                        addresses[idx].lat = p.coords.latitude;
+                        addresses[idx].lng = p.coords.longitude;
+                        localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
+                        if (currentView === 'map') renderMarkers();
+                    }
+                }, null, { timeout: 1000 });
+            }
         }
 
         function saveAndRender() {
             localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
             document.getElementById('stopCounter').textContent = addresses.length;
             const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
-            
-            if (addresses.length === 0) { 
-                listEl.innerHTML = ''; 
-                emptyEl.classList.remove('hidden'); 
-                return; 
-            }
-            
+            if (addresses.length === 0) { listEl.innerHTML = ''; emptyEl.classList.remove('hidden'); return; }
             emptyEl.classList.add('hidden');
             listEl.innerHTML = addresses.map(item => `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
-                            <span class="text-[10px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
+                            <span class="text-[10px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic uppercase">STOP ${item.time}</span>
                             <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight">${item.address}</p>
                         </div>
                         <button onclick="deleteAddress(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
@@ -467,8 +420,7 @@
                         <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug">${item.note}</p>
                     </div>` : ''}
                 </li>`).join('');
-            lucide.createIcons(); 
-            if (currentView === 'map') renderMarkers();
+            lucide.createIcons();
         }
 
         // --- UI ACTIONS ---
@@ -499,7 +451,6 @@
             const lv = document.getElementById('listView'), mv = document.getElementById('mapView'), sv = document.getElementById('settingsView'), bb = document.getElementById('bottomBar'), ha = document.getElementById('headerActions');
             [lv, mv, sv].forEach(el => el.classList.add('view-hidden'));
             bb.classList.remove('translate-y-40'); ha.classList.remove('opacity-0', 'pointer-events-none');
-            
             if (view === 'map') {
                 mv.classList.remove('view-hidden'); currentView = 'map'; initMap();
                 document.getElementById('toggleText').textContent = 'Lista'; document.getElementById('toggleIcon').setAttribute('data-lucide', 'list');
@@ -519,7 +470,6 @@
             map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
             markersGroup = L.layerGroup().addTo(map);
-            refreshTheme();
         }
 
         function renderMarkers() {
@@ -535,8 +485,8 @@
             map.fitBounds(bounds, { padding: [50, 50] });
         }
 
-        function deleteAddress(id) { if (confirm("Usunąć stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
-        function clearData() { if (confirm("Wyczyścić dzisiejszą listę?")) { addresses = []; saveAndRender(); } }
+        function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
+        function clearData() { if (confirm("Wyczyścić listę?")) { addresses = []; saveAndRender(); } }
         function showToast(msg, icon = "info") {
             const t = document.getElementById('toast'); document.getElementById('toastText').textContent = msg;
             const iconEl = document.getElementById('toastIcon'); iconEl.setAttribute('data-lucide', icon);
@@ -550,19 +500,11 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${new Date().toISOString().split('T')[0]}.csv`; link.click();
         }
 
-        function shareApp() { navigator.share ? navigator.share({ title: 'DPD Licznik', url: window.location.href }) : showToast("Skopiuj link"); }
+        function shareApp() { navigator.share ? navigator.share({ title: 'DPD Licznik', url: window.location.href }) : showToast("Skopiuj link z paska"); }
 
-        // Start WakeLock on first click
         document.body.addEventListener('click', () => requestWakeLock(), { once: true });
-        
         initSettingsUI(); refreshTheme(); saveAndRender();
-        
-        // Timer for clock and theme auto-switch
-        setInterval(() => { 
-            const now = new Date(); 
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }); 
-            if (config.theme === 'auto') refreshTheme(); 
-        }, 60000);
+        setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
     </script>
 </body>
 </html>
