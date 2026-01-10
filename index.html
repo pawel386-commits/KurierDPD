@@ -75,12 +75,12 @@
         
         ::-webkit-scrollbar { display: none; }
 
-        #tipModal.active {
-            opacity: 1;
-            pointer-events: auto;
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
-        #tipModal.active > div {
-            transform: scale(1);
+        .modal-active > div {
+            transform: scale(1) !important;
         }
     </style>
 </head>
@@ -139,7 +139,7 @@
         <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
     </video>
 
-    <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
+    <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
         <!-- List View -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm text-left">
@@ -162,7 +162,7 @@
         </div>
 
         <!-- Settings View -->
-        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40">
+        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40 text-left">
             <div class="header-safe-area"></div>
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
@@ -208,6 +208,27 @@
         </div>
     </div>
 
+    <!-- Edycja Stopu Modal -->
+    <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
+            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
+            <div class="space-y-4">
+                <div class="bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
+                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                </div>
+                <div class="bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
+                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug"></textarea>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px]">Anuluj</button>
+                <button onclick="confirmEdit()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px]">Zapisz</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
@@ -242,6 +263,7 @@
         let map = null, markersGroup = null;
         let cachedGps = null;
         let activeTipId = null;
+        let activeEditId = null;
 
         lucide.createIcons();
 
@@ -307,7 +329,7 @@
             }
         }
 
-        // --- SPEECH RECOGNITION ---
+        // --- ROZPOZNAWANIE MOWY ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -318,10 +340,8 @@
 
             recognition.onstart = () => {
                 isRecording = true;
-                // RESET: Czyszczenie starego tekstu
                 lastTranscript = "";
                 document.getElementById('liveText').textContent = "Słucham...";
-                
                 requestWakeLock();
                 prefetchGps();
                 document.getElementById('micBtn').classList.add('pulse-red');
@@ -389,11 +409,9 @@
 
         function addEntry(text) {
             if (!text || text.trim().length < 2) return;
-            
             const keyword = config.stopWord.toLowerCase().trim();
             const lowerText = text.toLowerCase();
             const splitIndex = lowerText.indexOf(keyword);
-            
             let address = "", note = "";
             if (splitIndex !== -1) {
                 address = text.substring(0, splitIndex).trim();
@@ -401,33 +419,24 @@
             } else {
                 address = text;
             }
-
             address = formatPolishNumbers(address);
             if (address.length < 2) return;
-            
             address = address.charAt(0).toUpperCase() + address.slice(1);
             if (note) {
                 note = note.trim();
                 if (note.startsWith('.') || note.startsWith(',')) note = note.substring(1).trim();
                 note = note.charAt(0).toUpperCase() + note.slice(1);
             }
-
             const entryId = Date.now();
             const entry = {
                 id: entryId,
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
-                address, note, 
-                tip: 0,
-                lat: cachedGps ? cachedGps.lat : null, 
-                lng: cachedGps ? cachedGps.lng : null
+                address, note, tip: 0, lat: cachedGps ? cachedGps.lat : null, lng: cachedGps ? cachedGps.lng : null
             };
-
             addresses.unshift(entry);
             saveAndRender();
-            
             showToast("Stop dodany!", "check-circle", "text-green-500");
-
             if (config.gpsEnabled && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     const idx = addresses.findIndex(a => a.id === entryId);
@@ -442,19 +451,19 @@
             }
         }
 
-        // --- NAPIWKI ---
+        // --- MODALE ---
         function openTipModal(id) {
             const entry = addresses.find(a => a.id === id);
             if (!entry) return;
             activeTipId = id;
             document.getElementById('tipAddress').textContent = entry.address;
             document.getElementById('tipInput').value = entry.tip > 0 ? entry.tip : "";
-            document.getElementById('tipModal').classList.add('active');
+            document.getElementById('tipModal').classList.add('modal-active');
             setTimeout(() => document.getElementById('tipInput').focus(), 300);
         }
 
         function closeTipModal() {
-            document.getElementById('tipModal').classList.remove('active');
+            document.getElementById('tipModal').classList.remove('modal-active');
             activeTipId = null;
         }
 
@@ -469,22 +478,47 @@
             closeTipModal();
         }
 
+        function openEditModal(id) {
+            const entry = addresses.find(a => a.id === id);
+            if (!entry) return;
+            activeEditId = id;
+            document.getElementById('editAddressInput').value = entry.address;
+            document.getElementById('editNoteInput').value = entry.note || "";
+            document.getElementById('editModal').classList.add('modal-active');
+            setTimeout(() => document.getElementById('editAddressInput').focus(), 300);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('modal-active');
+            activeEditId = null;
+        }
+
+        function confirmEdit() {
+            const newAddress = document.getElementById('editAddressInput').value.trim();
+            const newNote = document.getElementById('editNoteInput').value.trim();
+            if (newAddress.length < 2) return showToast("Adres za krótki", "alert-triangle", "text-red-500");
+            const idx = addresses.findIndex(a => a.id === activeEditId);
+            if (idx !== -1) {
+                addresses[idx].address = newAddress;
+                addresses[idx].note = newNote;
+                saveAndRender();
+                showToast("Stop zaktualizowany!", "pencil", "text-green-500");
+            }
+            closeEditModal();
+        }
+
+        // --- RENDERING ---
         function saveAndRender() {
             localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
-            
-            // Statystyki w belce
             document.getElementById('stopCounter').textContent = addresses.length;
             const totalTipAmount = addresses.reduce((sum, item) => sum + (parseFloat(item.tip) || 0), 0);
             document.getElementById('tipTotal').textContent = totalTipAmount.toFixed(2) + " zł";
-
             const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
-            
             if (addresses.length === 0) {
                 listEl.innerHTML = '';
                 emptyEl.classList.remove('hidden');
                 return;
             }
-            
             emptyEl.classList.add('hidden');
             listEl.innerHTML = addresses.map(item => `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
@@ -501,12 +535,15 @@
                             </div>
                             <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-1">
+                            <button onclick="openEditModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
                             <button onclick="openTipModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-green-500 transition-colors">
-                                <i data-lucide="banknote" class="w-5 h-5"></i>
+                                <i data-lucide="banknote" class="w-4 h-4"></i>
                             </button>
                             <button onclick="deleteAddress(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors">
-                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
@@ -531,7 +568,6 @@
             markersGroup.clearLayers();
             const validPoints = addresses.filter(a => a.lat && a.lng);
             if (validPoints.length === 0) return;
-            
             const bounds = L.latLngBounds();
             validPoints.forEach(p => {
                 const marker = L.circleMarker([p.lat, p.lng], { 
@@ -584,7 +620,6 @@
 
         function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
         function clearData() { if (confirm("Wyczyścić listę?")) { addresses = []; saveAndRender(); } }
-        
         function showToast(msg, icon = "info", colorClass = "text-blue-500") {
             const t = document.getElementById('toast');
             document.getElementById('toastText').textContent = msg;
