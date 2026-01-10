@@ -124,11 +124,15 @@
             <!-- Belka Statystyk -->
             <div class="mt-4 bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10">
                 <div class="flex flex-col">
-                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Ilość stopów</span>
-                    <span id="stopCounter" class="text-2xl font-black leading-none">0</span>
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Doręczenia</span>
+                    <span id="deliveryCounter" class="text-2xl font-black leading-none">0</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Odbiory</span>
+                    <span id="pickupCounter" class="text-2xl font-black leading-none text-zinc-300">0</span>
                 </div>
                 <div class="flex flex-col items-end">
-                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Suma napiwków</span>
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Napiwki</span>
                     <span id="tipTotal" class="text-2xl font-black leading-none text-green-300">0.00 zł</span>
                 </div>
             </div>
@@ -213,11 +217,11 @@
         <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
             <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
             <div class="space-y-4">
-                <div class="bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
                     <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
                     <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                 </div>
-                <div class="bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
                     <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
                     <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug"></textarea>
                 </div>
@@ -234,24 +238,24 @@
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
             <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
-                <button onclick="clearData()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red"><i data-lucide="trash-2" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase">Reset</span></button>
+                <button onclick="clearData()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red transition-all"><i data-lucide="trash-2" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase">Reset</span></button>
                 <div class="relative -top-10 text-center">
                     <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900"><i data-lucide="mic" id="micIcon" class="w-10 h-10"></i></button>
                     <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Słucham...</div>
                 </div>
-                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase text-left">Raport</span></button>
+                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark transition-all"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase text-left">Raport</span></button>
             </div>
         </div>
     </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
-        <i data-lucide="info" id="toastIcon" class="w-4 h-4"></i><span id="toastText"></span>
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
         // --- DATA & CONFIG ---
-        let addresses = JSON.parse(localStorage.getItem('dpd_logs_v7') || '[]');
+        let addresses = JSON.parse(localStorage.getItem('dpd_logs_v8') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v4') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true
         }));
@@ -290,6 +294,7 @@
         function setThemeMode(mode) {
             config.theme = mode;
             applySettings();
+            refreshTheme();
         }
 
         function updateThemeButtons() {
@@ -307,6 +312,7 @@
             const modes = ['light', 'dark', 'auto'];
             config.theme = modes[(modes.indexOf(config.theme) + 1) % 3];
             applySettings();
+            refreshTheme();
         }
 
         // --- WAKE LOCK & GPS PRE-FETCH ---
@@ -329,7 +335,7 @@
             }
         }
 
-        // --- ROZPOZNAWANIE MOWY ---
+        // --- SPEECH RECOGNITION ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -432,7 +438,9 @@
                 id: entryId,
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
-                address, note, tip: 0, lat: cachedGps ? cachedGps.lat : null, lng: cachedGps ? cachedGps.lng : null
+                address, note, tip: 0, 
+                type: 'delivery', // Domyślnie Doręczenie
+                lat: cachedGps ? cachedGps.lat : null, lng: cachedGps ? cachedGps.lng : null
             };
             addresses.unshift(entry);
             saveAndRender();
@@ -444,10 +452,19 @@
                         addresses[idx].lat = p.coords.latitude;
                         addresses[idx].lng = p.coords.longitude;
                         cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude };
-                        localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
+                        localStorage.setItem('dpd_logs_v8', JSON.stringify(addresses));
                         saveAndRender(); 
                     }
                 }, null, { timeout: 3000, enableHighAccuracy: true });
+            }
+        }
+
+        // --- LOGIKA TYPU STOPU ---
+        function toggleStopType(id) {
+            const idx = addresses.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery';
+                saveAndRender();
             }
         }
 
@@ -509,10 +526,17 @@
 
         // --- RENDERING ---
         function saveAndRender() {
-            localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
-            document.getElementById('stopCounter').textContent = addresses.length;
+            localStorage.setItem('dpd_logs_v8', JSON.stringify(addresses));
+            
+            // Liczniki
+            const deliveryCount = addresses.filter(a => a.type === 'delivery').length;
+            const pickupCount = addresses.filter(a => a.type === 'pickup').length;
             const totalTipAmount = addresses.reduce((sum, item) => sum + (parseFloat(item.tip) || 0), 0);
+            
+            document.getElementById('deliveryCounter').textContent = deliveryCount;
+            document.getElementById('pickupCounter').textContent = pickupCount;
             document.getElementById('tipTotal').textContent = totalTipAmount.toFixed(2) + " zł";
+
             const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
             if (addresses.length === 0) {
                 listEl.innerHTML = '';
@@ -520,12 +544,18 @@
                 return;
             }
             emptyEl.classList.add('hidden');
-            listEl.innerHTML = addresses.map(item => `
-                <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
+            listEl.innerHTML = addresses.map(item => {
+                const isPickup = item.type === 'pickup';
+                const borderColorClass = isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red';
+                const labelBgClass = isPickup ? 'bg-zinc-600' : 'bg-dpd-dark dark:bg-zinc-950';
+                const labelText = isPickup ? 'ODBIÓR' : 'DORĘCZENIE';
+                
+                return `
+                <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${borderColorClass} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2 transition-all">
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[8px] font-black ${labelBgClass} text-white px-2 py-0.5 rounded italic uppercase">${labelText} ${item.time}</span>
                                 ${item.lat !== null ? `
                                     <svg class="w-3 h-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
@@ -535,7 +565,10 @@
                             </div>
                             <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                         </div>
-                        <div class="flex gap-1">
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="toggleStopType(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:scale-90 transition-all ${isPickup ? 'text-zinc-600' : 'text-dpd-red'}" title="Zmień typ">
+                                <i data-lucide="${isPickup ? 'truck' : 'package-plus'}" class="w-4 h-4"></i>
+                            </button>
                             <button onclick="openEditModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
@@ -550,7 +583,8 @@
                     ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left">
                         <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance text-left">${item.note}</p>
                     </div>` : ''}
-                </li>`).join('');
+                </li>`;
+            }).join('');
             lucide.createIcons();
             if (map && currentView === 'map') renderMarkers();
         }
@@ -570,10 +604,11 @@
             if (validPoints.length === 0) return;
             const bounds = L.latLngBounds();
             validPoints.forEach(p => {
+                const color = p.type === 'pickup' ? "#52525b" : "#dc0032";
                 const marker = L.circleMarker([p.lat, p.lng], { 
-                    radius: 8, fillColor: "#dc0032", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 
+                    radius: 8, fillColor: color, color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 
                 }).addTo(markersGroup);
-                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
+                marker.bindPopup(`<b>${p.time} [${p.type === 'pickup' ? 'Odbiór' : 'Doręczenie'}]</b><br>${p.address}`);
                 bounds.extend([p.lat, p.lng]);
             });
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -620,6 +655,7 @@
 
         function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
         function clearData() { if (confirm("Wyczyścić listę?")) { addresses = []; saveAndRender(); } }
+        
         function showToast(msg, icon = "info", colorClass = "text-blue-500") {
             const t = document.getElementById('toast');
             document.getElementById('toastText').textContent = msg;
@@ -633,7 +669,10 @@
 
         function exportToCSV() {
             if (addresses.length === 0) return;
-            let csv = "\uFEFFData;Godzina;Adres;Notatka;Napiwek\n" + addresses.map(r => `${r.date};${r.time};"${r.address}";"${r.note || ''}";${r.tip || 0}`).join("\n");
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + addresses.map(r => {
+                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0}`;
+            }).join("\n");
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD.csv`; link.click();
         }
