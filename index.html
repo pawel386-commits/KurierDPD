@@ -80,7 +80,7 @@
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
     <!-- Header -->
-    <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none">
+    <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none text-left">
         <div class="header-safe-area"></div>
         <div class="p-4 pt-2 pb-4">
             <div class="flex justify-between items-center">
@@ -145,6 +145,7 @@
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
 
+        <!-- Widok Mapy -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
@@ -160,11 +161,11 @@
                 <section class="space-y-4">
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
                         <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
-                        <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                        <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
                         <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
-                        <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                        <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                 </section>
                 <section class="grid grid-cols-3 gap-2">
@@ -236,6 +237,14 @@
             }
             updateThemeButtons();
             lucide.createIcons();
+            
+            if (map) { 
+                const pane = document.querySelector('.leaflet-tile-pane');
+                if (pane) {
+                    if (target === 'dark') pane.classList.add('map-dark-filter');
+                    else pane.classList.remove('map-dark-filter');
+                }
+            }
         }
 
         function setThemeMode(mode) {
@@ -330,47 +339,52 @@
             isRecording ? recognition.stop() : recognition.start();
         }
 
-        // --- FORMATOWANIE LICZB (POPRAWKA "8 NAŚCIE") ---
+        // --- FORMATOWANIE LICZB ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
-            
-            // 1. Połącz rozbite przyrostki (np. "8 naście" -> "8naście", "osiem naście" -> "osiemnaście")
             t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
-
-            // 2. Mapa podstawowych wyrazów na cyfry
-            const numMap = { 
-                'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 
-                'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 
-                'dziesięć': '10'
-            };
-            Object.keys(numMap).forEach(word => { 
-                t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); 
-            });
-
-            // 3. Obsługa przyrostków dla cyfr (np. "8naście" -> "18", "2dzieścia" -> "20")
-            // naście (11-19)
-            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13')
-                 .replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16')
-                 .replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
-                 .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13')
-                 .replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16')
-                 .replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
-
-            // dziesiątki
-            t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40')
-                 .replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70')
-                 .replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
-
-            // 4. Połącz dziesiątki z jednościami (np. "20 3" -> "23")
-            t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => {
-                return parseInt(p1) + parseInt(p2);
-            });
-
-            // 5. Adresy (przez, łamane)
+            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
+            Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
+            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19');
+            t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40').replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70').replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
+            t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => parseInt(p1) + parseInt(p2));
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
             t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
-            
             return t;
+        }
+
+        // --- MAP ENGINE ---
+        function initMap() {
+            if (map) return;
+            map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OSM'
+            }).addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
+        }
+
+        function renderMarkers() {
+            if (!markersGroup || !map) return;
+            markersGroup.clearLayers();
+            const validPoints = addresses.filter(a => a.lat && a.lng);
+            if (validPoints.length === 0) return;
+            
+            const bounds = L.latLngBounds();
+            validPoints.forEach(p => {
+                const marker = L.circleMarker([p.lat, p.lng], { 
+                    radius: 8, 
+                    fillColor: "#dc0032", 
+                    color: "#fff", 
+                    weight: 2, 
+                    opacity: 1, 
+                    fillOpacity: 0.8 
+                }).addTo(markersGroup);
+                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
+                bounds.extend([p.lat, p.lng]);
+            });
+            
+            // Dopasuj widok tylko jeśli dodajemy nowy punkt lub otwieramy mapę pierwszy raz
+            map.fitBounds(bounds, { padding: [50, 50] });
         }
 
         // --- DODAWANIE WPISU ---
@@ -417,6 +431,8 @@
                         addresses[idx].lat = p.coords.latitude;
                         addresses[idx].lng = p.coords.longitude;
                         localStorage.setItem('dpd_logs_v7', JSON.stringify(addresses));
+                        // Odśwież mapę po otrzymaniu GPS
+                        if (currentView === 'map') renderMarkers();
                     }
                 }, null, { timeout: 2000 });
             }
@@ -439,15 +455,17 @@
                     <div class="flex justify-between items-start text-left">
                         <div class="flex-1 pr-2">
                             <span class="text-[9px] font-black bg-dpd-dark dark:bg-zinc-950 text-white px-2 py-0.5 rounded italic">DPD ${item.time}</span>
-                            <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance">${item.address}</p>
+                            <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                         </div>
                         <button onclick="deleteAddress(${item.id})" class="text-gray-400 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                     ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left">
-                        <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance">${item.note}</p>
+                        <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance text-left">${item.note}</p>
                     </div>` : ''}
                 </li>`).join('');
             lucide.createIcons();
+            // Odśwież znaczniki na mapie przy każdej zmianie listy
+            if (map && currentView === 'map') renderMarkers();
         }
 
         // --- AKCJE INTERFEJSU ---
@@ -477,23 +495,20 @@
             document.getElementById('bottomBar').classList.toggle('translate-y-40', view === 'settings');
             document.getElementById('headerActions').classList.toggle('opacity-0', view === 'settings');
             currentView = view;
+            
             if (view === 'map') { 
                 initMap(); 
                 document.getElementById('toggleText').textContent = 'Lista'; 
                 document.getElementById('toggleIcon').setAttribute('data-lucide', 'list');
-                setTimeout(() => map.invalidateSize(), 100);
+                setTimeout(() => {
+                    map.invalidateSize();
+                    renderMarkers(); // Wymuś renderowanie znaczników przy wejściu na mapę
+                }, 150);
             } else {
                 document.getElementById('toggleText').textContent = 'Mapa'; 
                 document.getElementById('toggleIcon').setAttribute('data-lucide', 'map');
             }
             lucide.createIcons();
-        }
-
-        function initMap() {
-            if (map) return;
-            map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            markersGroup = L.layerGroup().addTo(map);
         }
 
         function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
