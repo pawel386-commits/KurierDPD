@@ -122,7 +122,6 @@
         </div>
     </header>
 
-    <!-- Background video hack to keep screen awake -->
     <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
         <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
     </video>
@@ -163,7 +162,7 @@
                         <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Słowo-klucz notatki</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
                         <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                     </div>
                 </section>
@@ -215,7 +214,7 @@
         let wakeLock = null;
         let currentView = 'list';
         let map = null, markersGroup = null;
-        let cachedGps = null; // Background GPS caching
+        let cachedGps = null;
 
         lucide.createIcons();
 
@@ -294,7 +293,7 @@
                 isRecording = true;
                 lastTranscript = "";
                 requestWakeLock();
-                prefetchGps(); // Start GPS lookup while user is speaking
+                prefetchGps();
                 document.getElementById('micBtn').classList.add('pulse-red');
                 document.getElementById('micIcon').setAttribute('data-lucide', 'circle-stop');
                 document.getElementById('livePreview').classList.remove('hidden');
@@ -342,33 +341,36 @@
             isRecording ? recognition.stop() : recognition.start();
         }
 
-        // --- NUMBER FORMATTING ---
+        // --- CORE LOGIC: ADRESY I LICZBY ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
-            // Connect broken numbers (e.g., "8 naście" -> "8naście")
+            
+            // 1. Łączymy rozdzielone końcówki "naście" (np. "3 naście" -> "3naście")
             t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
 
             const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
             Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
             
-            // Teen numbers
+            // 2. Zamiana słowna na cyfry
             t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
                  .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13').replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16').replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
 
-            // Decimal numbers
             t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40').replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70').replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
             
-            // Sum decimal + single (e.g., "20 3" -> "23")
             t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => parseInt(p1) + parseInt(p2));
 
-            // Address house number slashes
-            t = t.replace(/(\d+[a-z]*)\s*(przez|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
-            t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2').replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
+            // 3. ŁĄCZENIE CYFR Z LITERAMI (np. "12 a" -> "12a") - KLUCZOWE DLA IPHONE
+            t = t.replace(/(\d+)\s+([a-z])\b/gi, '$1$2');
+
+            // 4. OBSŁUGA UKOŚNIKA (przez, łamane, na)
+            t = t.replace(/(\d+[a-z]*)\s*(przez|łamane na|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
+            
+            // Czyszczenie zbędnych spacji przy ukośnikach
+            t = t.replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
             
             return t;
         }
 
-        // --- ENTRY LOGIC ---
         function addEntry(text) {
             if (!text || text.trim().length < 2) return;
             
@@ -408,7 +410,6 @@
             saveAndRender();
             showToast("Stop dodany!", "check-circle");
 
-            // Final GPS update if cache was empty or outdated
             if (config.gpsEnabled && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     const idx = addresses.findIndex(a => a.id === entryId);
@@ -430,11 +431,11 @@
             
             if (addresses.length === 0) {
                 listEl.innerHTML = '';
-                emptyState.classList.remove('hidden');
+                emptyEl.classList.remove('hidden');
                 return;
             }
             
-            emptyState.classList.add('hidden');
+            emptyEl.classList.add('hidden');
             listEl.innerHTML = addresses.map(item => `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 border-l-dpd-red border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
                     <div class="flex justify-between items-start text-left">
