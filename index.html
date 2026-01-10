@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Kurier Log - DPD Edition</title>
     
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kurier Log">
+    
+    <!-- Kolor paska systemowego - kontroluje obszar Notch na iOS -->
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,15 +19,6 @@
     <!-- Leaflet Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script type="module">
-        // Import Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        window.firebaseCore = { initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, query };
-    </script>
 
     <script>
         tailwind.config = {
@@ -41,46 +35,80 @@
 
     <style>
         :root { --dpd-red: #dc0032; }
-        html { background-color: var(--dpd-red); transition: background-color 0.3s ease; }
+        
+        /* Wymuszenie czerwonego tła za Notchem na iOS */
+        html {
+            background-color: var(--dpd-red);
+            transition: background-color 0.3s ease;
+        }
+
         html.dark { background-color: #000000; }
-        body { -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; background-color: #f4f4f4; height: 100%; }
+
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            height: 100%;
+        }
+
         .dark body { background-color: #000000; }
-        .header-safe-area { padding-top: env(safe-area-inset-top); background-color: var(--dpd-red); }
+        
+        .header-safe-area {
+            padding-top: env(safe-area-inset-top);
+            background-color: var(--dpd-red);
+        }
+
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
         .pulse-red { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(220, 0, 50, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0); }
         }
+        
         #map { height: 100%; width: 100%; z-index: 1; }
         .view-hidden { display: none !important; }
         .map-dark-filter { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
-        .modal-active > div { transform: scale(1) !important; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        
+        ::-webkit-scrollbar { display: none; }
+
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        .modal-active > div {
+            transform: scale(1) !important;
+        }
+
+        /* Tabs transition */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
+    <!-- Header -->
     <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none text-left">
         <div class="header-safe-area"></div>
         <div class="p-4 pt-2 pb-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white px-2 py-1.5 rounded-lg shadow-sm">
+                <div class="flex items-center gap-3 text-left">
+                    <div class="bg-white px-2 py-1.5 rounded-lg inline-block shadow-sm">
                         <img src="https://www.dpd.com/wp-content/themes/DPD_NoLogin/images/DPD_logo_redgrad_rgb_responsive.svg" alt="DPD Logo" class="h-5 w-auto">
                     </div>
                     <div>
-                        <div class="flex items-center gap-1.5">
-                            <p id="headerName" class="text-[10px] font-black uppercase tracking-wider">Licznik Stopów</p>
-                            <i id="cloudSyncIcon" data-lucide="cloud-off" class="w-3 h-3 text-white/50"></i>
-                        </div>
-                        <p class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em]">DPD Cloud Sync</p>
+                        <p id="headerName" class="text-[10px] font-black uppercase tracking-wider leading-tight">Licznik Stopów</p>
+                        <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em]">DPD Logistics</p>
                     </div>
                 </div>
-                <div id="headerActions" class="flex flex-col items-end gap-2">
+                <div id="headerActions" class="text-right flex flex-col items-end gap-2">
                     <div class="flex items-center gap-2">
                         <div id="wakeStatus" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full"></div> <span id="wakeText">Blokada: Wył</span>
@@ -101,28 +129,32 @@
                 </div>
             </div>
             
+            <!-- Belka Statystyk -->
             <div class="mt-4 bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10">
                 <div class="flex flex-col">
-                    <span class="text-[9px] font-bold uppercase opacity-80">Doręczenia</span>
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Doręczenia</span>
                     <span id="deliveryCounter" class="text-2xl font-black leading-none">0</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <span class="text-[9px] font-bold uppercase opacity-80">Odbiory</span>
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Odbiory</span>
                     <span id="pickupCounter" class="text-2xl font-black leading-none text-zinc-300">0</span>
                 </div>
                 <div class="flex flex-col items-end">
-                    <span class="text-[9px] font-bold uppercase opacity-80">Napiwki</span>
+                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter">Napiwki</span>
                     <span id="tipTotal" class="text-2xl font-black leading-none text-green-300">0.00 zł</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;"><source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4"></video>
+    <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
+        <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
+    </video>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
+        <!-- List View -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
-            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
+            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm text-left">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
@@ -136,12 +168,16 @@
             <ul id="addressList" class="space-y-3 pb-64"></ul>
         </div>
 
+        <!-- Map View -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
+        <!-- Settings & History View -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden">
             <div class="header-safe-area flex-none"></div>
+            
+            <!-- Sub-navigation Tabs -->
             <div class="p-4 pb-0 flex-none">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-black uppercase tracking-tight">Panel Sterowania</h2>
@@ -152,37 +188,50 @@
                     <button onclick="switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400">Historia dni</button>
                 </div>
             </div>
+
             <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40">
+                <!-- Tab: Config -->
                 <div id="tabContentConfig" class="tab-content active space-y-6">
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
-                        <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
-                    </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 text-balance">Hasło notatki (słowo-klucz)</label>
-                        <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
-                    </div>
-                    <section class="grid grid-cols-3 gap-2">
+                    <section class="space-y-4">
+                        <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-balance">
+                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
+                            <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                        </div>
+                        <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-balance">
+                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
+                            <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                        </div>
+                    </section>
+                    <section class="grid grid-cols-3 gap-2 text-left">
                         <button id="btnLight" onclick="setThemeMode('light')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Jasny</button>
                         <button id="btnDark" onclick="setThemeMode('dark')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Ciemny</button>
                         <button id="btnAuto" onclick="setThemeMode('auto')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Auto</button>
                     </section>
-                    <div class="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700">
-                        <p class="text-[9px] font-black uppercase text-zinc-400 mb-2">Cloud User ID</p>
-                        <p id="userIdDisplay" class="text-[10px] font-mono break-all opacity-50 select-text">Ładowanie...</p>
+                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <span class="text-sm font-bold">Używaj GPS</span>
+                        <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
+                    </label>
+                    <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
+                    </button>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tabContentHistory" class="tab-content space-y-4">
+                    <div id="historyList" class="space-y-4">
+                        <!-- History items will be injected here -->
                     </div>
                 </div>
-                <div id="tabContentHistory" class="tab-content space-y-4"><div id="historyList"></div></div>
             </div>
         </div>
     </main>
 
-    <!-- Modals -->
+    <!-- Napiwek Modal -->
     <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
-            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
-            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
-            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left">Napiwek</h3>
+            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate text-left"></p>
+            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none text-left">
             <div class="flex gap-3">
                 <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px]">Anuluj</button>
                 <button onclick="confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px]">Zapisz</button>
@@ -190,16 +239,17 @@
         </div>
     </div>
 
+    <!-- Edycja Stopu Modal -->
     <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left text-balance">
-            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
+            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red text-left">Edytuj Stop</h3>
             <div class="space-y-4">
                 <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
                     <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
                     <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                 </div>
                 <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
-                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase text-left">Notatka</label>
+                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
                     <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug text-left"></textarea>
                 </div>
             </div>
@@ -210,6 +260,7 @@
         </div>
     </div>
 
+    <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -219,19 +270,23 @@
                     <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900"><i data-lucide="mic" id="micIcon" class="w-10 h-10"></i></button>
                     <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black">Słucham...</div>
                 </div>
-                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark transition-all"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase">Raport</span></button>
+                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark transition-all"><i data-lucide="file-spreadsheet" class="w-6 h-6"></i><span class="text-[10px] font-bold uppercase text-left">Raport</span></button>
             </div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
         <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // --- CORE DATA ---
-        let addresses = [];
-        let config = JSON.parse(localStorage.getItem('dpd_config_v4') || JSON.stringify({ name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true }));
+        // --- DATA & CONFIG ---
+        let addresses = JSON.parse(localStorage.getItem('dpd_logs_v8') || '[]');
+        let config = JSON.parse(localStorage.getItem('dpd_config_v4') || JSON.stringify({
+            name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true
+        }));
+
         let isRecording = false;
         let lastTranscript = "";
         let wakeLock = null;
@@ -240,116 +295,145 @@
         let cachedGps = null;
         let activeTipId = null;
         let activeEditId = null;
-        let currentUser = null;
 
-        // --- CLOUD SYNC (FIREBASE) ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'dpd-kurier-log';
-        let db, auth;
-
-        async function initCloud() {
-            if (typeof firebaseCore === 'undefined') return;
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = firebaseCore.initializeApp(firebaseConfig);
-            auth = firebaseCore.getAuth(app);
-            db = firebaseCore.getFirestore(app);
-
-            // Rule 3: Auth First
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await firebaseCore.signInWithCustomToken(auth, __initial_auth_token).catch(() => firebaseCore.signInAnonymously(auth));
-            } else {
-                await firebaseCore.signInAnonymously(auth);
-            }
-
-            firebaseCore.onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    document.getElementById('userIdDisplay').textContent = user.uid;
-                    document.getElementById('cloudSyncIcon').setAttribute('data-lucide', 'cloud');
-                    document.getElementById('cloudSyncIcon').classList.replace('text-white/50', 'text-green-400');
-                    lucide.createIcons();
-                    startDataSync(user.uid);
-                }
-            });
-        }
-
-        function startDataSync(uid) {
-            // Rule 1: Path /artifacts/{appId}/users/{userId}/addresses
-            const colRef = firebaseCore.collection(db, 'artifacts', appId, 'users', uid, 'addresses');
-            const q = firebaseCore.query(colRef);
-            
-            // Rule 2: Simple Query + Memory Sort
-            firebaseCore.onSnapshot(q, (snapshot) => {
-                addresses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sort by timestamp descending
-                addresses.sort((a, b) => (b.id || 0) - (a.id || 0));
-                saveAndRender();
-            }, (error) => console.error("Sync error:", error));
-        }
-
-        async function cloudUpdate(id, data) {
-            if (!currentUser) return;
-            const docRef = firebaseCore.doc(db, 'artifacts', appId, 'users', currentUser.uid, 'addresses', id.toString());
-            await firebaseCore.setDoc(docRef, data, { merge: true });
-        }
-
-        async function cloudDelete(id) {
-            if (!currentUser) return;
-            const docRef = firebaseCore.doc(db, 'artifacts', appId, 'users', currentUser.uid, 'addresses', id.toString());
-            await firebaseCore.deleteDoc(docRef);
-        }
-
-        // --- VOICE CONFIRMATIONS (TTS) ---
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'pl-PL';
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+        lucide.createIcons();
 
         // --- THEME ---
         function refreshTheme() {
             let target = config.theme;
-            if (config.theme === 'auto') target = (new Date().getHours() >= 7 && new Date().getHours() < 19) ? 'light' : 'dark';
-            target === 'dark' ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
-            document.getElementById('theme-color-meta').setAttribute('content', target === 'dark' ? '#000000' : '#dc0032');
+            if (config.theme === 'auto') {
+                const hour = new Date().getHours();
+                target = (hour >= 7 && hour < 19) ? 'light' : 'dark';
+            }
+            if (target === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeQuickIcon').setAttribute('data-lucide', 'moon');
+                document.getElementById('theme-color-meta').setAttribute('content', '#000000');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeQuickIcon').setAttribute('data-lucide', 'sun');
+                document.getElementById('theme-color-meta').setAttribute('content', '#dc0032');
+            }
             updateThemeButtons();
             lucide.createIcons();
         }
 
-        function setThemeMode(mode) { config.theme = mode; applySettings(); refreshTheme(); }
+        function setThemeMode(mode) {
+            config.theme = mode;
+            applySettings();
+            refreshTheme();
+        }
+
         function updateThemeButtons() {
-            ['light', 'dark', 'auto'].forEach(key => {
-                const el = document.getElementById('btn' + key.charAt(0).toUpperCase() + key.slice(1));
-                if (el) el.className = `p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all ${config.theme === key ? 'border-dpd-red text-dpd-red' : ''}`;
+            const btns = { light: 'btnLight', dark: 'btnDark', auto: 'btnAuto' };
+            Object.keys(btns).forEach(key => {
+                const el = document.getElementById(btns[key]);
+                if (el) {
+                    if (config.theme === key) el.classList.add('border-dpd-red', 'text-dpd-red');
+                    else el.classList.remove('border-dpd-red', 'text-dpd-red');
+                }
             });
         }
-        function cycleThemeManual() { const m = ['light', 'dark', 'auto']; setThemeMode(m[(m.indexOf(config.theme) + 1) % 3]); }
 
-        // --- SPEECH ---
+        function cycleThemeManual() {
+            const modes = ['light', 'dark', 'auto'];
+            config.theme = modes[(modes.indexOf(config.theme) + 1) % 3];
+            applySettings();
+            refreshTheme();
+        }
+
+        // --- WAKE LOCK & GPS PRE-FETCH ---
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+            document.getElementById('noSleepVideo').play().catch(() => {});
+            document.getElementById('wakeDot').classList.replace('bg-red-500', 'bg-green-500');
+            document.getElementById('wakeText').textContent = 'Blokada: WŁ';
+        }
+
+        function prefetchGps() {
+            if (config.gpsEnabled && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => { cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude }; },
+                    null,
+                    { timeout: 5000, enableHighAccuracy: true }
+                );
+            }
+        }
+
+        // --- SPEECH RECOGNITION ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'pl-PL';
             recognition.interimResults = true;
-            recognition.onstart = () => { isRecording = true; lastTranscript = ""; document.getElementById('liveText').textContent = "Słucham..."; document.getElementById('micBtn').classList.add('pulse-red'); document.getElementById('micIcon').setAttribute('data-lucide', 'circle-stop'); document.getElementById('livePreview').classList.remove('hidden'); document.getElementById('micLabel').style.opacity = '1'; lucide.createIcons(); if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude }); };
-            recognition.onresult = (e) => { let interim = ''; for (let i = e.resultIndex; i < e.results.length; ++i) { if (e.results[i].isFinal) { addEntry(e.results[i][0].transcript); lastTranscript = ""; } else { interim = e.results[i][0].transcript; lastTranscript = interim; } } document.getElementById('liveText').textContent = interim || "Słucham..."; };
-            recognition.onend = () => { if (lastTranscript.length > 1) addEntry(lastTranscript); isRecording = false; document.getElementById('micBtn').classList.remove('pulse-red'); document.getElementById('micIcon').setAttribute('data-lucide', 'mic'); document.getElementById('livePreview').classList.add('hidden'); document.getElementById('micLabel').style.opacity = '0'; lucide.createIcons(); };
-            recognition.onerror = () => recognition.stop();
-        }
-        function toggleRecognition() { if (!recognition) return showToast("Brak mowy", "info", "text-blue-500"); isRecording ? recognition.stop() : recognition.start(); }
+            recognition.continuous = false;
 
-        // --- FORMATTING ---
+            recognition.onstart = () => {
+                isRecording = true;
+                lastTranscript = "";
+                document.getElementById('liveText').textContent = "Słucham...";
+                requestWakeLock();
+                prefetchGps();
+                document.getElementById('micBtn').classList.add('pulse-red');
+                document.getElementById('micIcon').setAttribute('data-lucide', 'circle-stop');
+                document.getElementById('livePreview').classList.remove('hidden');
+                document.getElementById('micLabel').style.opacity = '1';
+                lucide.createIcons();
+            };
+
+            recognition.onresult = (e) => {
+                let interim = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    const transcript = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        lastTranscript = ""; 
+                        addEntry(transcript);
+                    } else {
+                        interim = transcript;
+                        lastTranscript = transcript;
+                    }
+                }
+                document.getElementById('liveText').textContent = interim || "Słucham...";
+            };
+
+            recognition.onend = () => {
+                if (lastTranscript.length > 1) {
+                    addEntry(lastTranscript);
+                    lastTranscript = "";
+                }
+                stopUIRecording();
+            };
+            
+            recognition.onerror = () => stopUIRecording();
+        }
+
+        function stopUIRecording() {
+            isRecording = false;
+            document.getElementById('micBtn').classList.remove('pulse-red');
+            document.getElementById('micIcon').setAttribute('data-lucide', 'mic');
+            document.getElementById('livePreview').classList.add('hidden');
+            document.getElementById('micLabel').style.opacity = '0';
+            lucide.createIcons();
+        }
+
+        function toggleRecognition() {
+            if (!recognition) return showToast("Brak mowy", "info", "text-blue-500");
+            isRecording ? recognition.stop() : recognition.start();
+        }
+
+        // --- CORE LOGIC: ADRESY I LICZBY ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
             t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
-            const map = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10', 'jednaście':'11','dwanaście':'12','trzynaście':'13','czternaście':'14','piętnaście':'15','szesnaście':'16','siedemnaście':'17','osiemnaście':'18','dziewiętnaście':'19' };
-            Object.keys(map).forEach(w => t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), map[w]));
-            t = t.replace(/1naście/g,'11').replace(/2naście/g,'12').replace(/3naście/g,'13').replace(/4naście/g,'14').replace(/5naście/g,'15').replace(/6naście/g,'16').replace(/7naście/g,'17').replace(/8naście/g,'18').replace(/9naście/g,'19');
-            t = t.replace(/2dzieścia/g,'20').replace(/3dzieści/g,'30').replace(/4dzieści/g,'40').replace(/5dziesiąt/g,'50').replace(/6dziesiąt/g,'60').replace(/7dziesiąt/g,'70').replace(/8dziesiąt/g,'80').replace(/9dziesiąt/g,'90');
-            t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (m,p1,p2) => parseInt(p1)+parseInt(p2));
+            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
+            Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
+            t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
+                 .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13').replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16').replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
+            t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40').replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70').replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
+            t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => parseInt(p1) + parseInt(p2));
             t = t.replace(/(\d+)\s+([a-z])\b/gi, '$1$2');
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane na|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
             t = t.replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
@@ -357,72 +441,273 @@
         }
 
         function addEntry(text) {
-            const kw = config.stopWord.toLowerCase().trim();
-            const lower = text.toLowerCase();
-            const sIdx = lower.indexOf(kw);
-            let addr = sIdx !== -1 ? text.substring(0, sIdx).trim() : text.trim();
-            let note = sIdx !== -1 ? text.substring(sIdx + kw.length).trim() : "";
-            addr = formatPolishNumbers(addr);
-            if (addr.length < 2) return;
-            addr = addr.charAt(0).toUpperCase() + addr.slice(1);
-            if (note) note = (note.startsWith('.') || note.startsWith(',') ? note.substring(1).trim() : note).charAt(0).toUpperCase() + note.slice(1);
-
-            const entryId = Date.now().toString();
-            const data = {
+            if (!text || text.trim().length < 2) return;
+            const keyword = config.stopWord.toLowerCase().trim();
+            const lowerText = text.toLowerCase();
+            const splitIndex = lowerText.indexOf(keyword);
+            let address = "", note = "";
+            if (splitIndex !== -1) {
+                address = text.substring(0, splitIndex).trim();
+                note = text.substring(splitIndex + keyword.length).trim();
+            } else {
+                address = text;
+            }
+            address = formatPolishNumbers(address);
+            if (address.length < 2) return;
+            address = address.charAt(0).toUpperCase() + address.slice(1);
+            if (note) {
+                note = note.trim();
+                if (note.startsWith('.') || note.startsWith(',')) note = note.substring(1).trim();
+                note = note.charAt(0).toUpperCase() + note.slice(1);
+            }
+            const entryId = Date.now();
+            const entry = {
+                id: entryId,
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
-                address: addr, note, tip: 0, type: 'delivery',
-                lat: cachedGps?.lat || null, lng: cachedGps?.lng || null
+                address, note, tip: 0, 
+                type: 'delivery', 
+                lat: cachedGps ? cachedGps.lat : null, lng: cachedGps ? cachedGps.lng : null
             };
-            
-            cloudUpdate(entryId, data);
-            speak("Dodano " + addr);
+            addresses.unshift(entry);
+            saveAndRender();
             showToast("Stop dodany!", "check-circle", "text-green-500");
+            if (config.gpsEnabled && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    const idx = addresses.findIndex(a => a.id === entryId);
+                    if (idx !== -1) {
+                        addresses[idx].lat = p.coords.latitude;
+                        addresses[idx].lng = p.coords.longitude;
+                        cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude };
+                        localStorage.setItem('dpd_logs_v8', JSON.stringify(addresses));
+                        saveAndRender(); 
+                    }
+                }, null, { timeout: 3000, enableHighAccuracy: true });
+            }
         }
 
-        // --- ACTIONS ---
-        function toggleStopType(id) { const i = addresses.find(a => a.id === id); if(i) cloudUpdate(id, { type: i.type === 'delivery' ? 'pickup' : 'delivery' }); }
-        function openTipModal(id) { const i = addresses.find(a => a.id === id); if(!i) return; activeTipId = id; document.getElementById('tipAddress').textContent = i.address; document.getElementById('tipInput').value = i.tip || ""; document.getElementById('tipModal').classList.add('modal-active'); setTimeout(() => document.getElementById('tipInput').focus(), 300); }
-        function confirmTip() { const v = parseFloat(document.getElementById('tipInput').value) || 0; if(activeTipId) cloudUpdate(activeTipId, { tip: v }); closeTipModal(); showToast("Zapisano napiwek", "banknote", "text-green-500"); }
-        function closeTipModal() { document.getElementById('tipModal').classList.remove('modal-active'); }
-        function openEditModal(id) { const i = addresses.find(a => a.id === id); if(!i) return; activeEditId = id; document.getElementById('editAddressInput').value = i.address; document.getElementById('editNoteInput').value = i.note || ""; document.getElementById('editModal').classList.add('modal-active'); setTimeout(() => document.getElementById('editAddressInput').focus(), 300); }
-        function confirmEdit() { const a = document.getElementById('editAddressInput').value.trim(); const n = document.getElementById('editNoteInput').value.trim(); if (a.length < 2) return; if(activeEditId) cloudUpdate(activeEditId, { address: a, note: n }); closeEditModal(); }
-        function closeEditModal() { document.getElementById('editModal').classList.remove('modal-active'); }
-        function deleteAddress(id) { if (confirm("Usunąć ten stop?")) cloudDelete(id); }
-        function clearData() { if (confirm("Wyczyścić dzisiejszą listę?")) { const today = new Date().toLocaleDateString('pl-PL'); addresses.filter(a => a.date === today).forEach(a => cloudDelete(a.id)); } }
+        function toggleStopType(id) {
+            const idx = addresses.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery';
+                saveAndRender();
+            }
+        }
 
-        // --- RENDER ---
+        // --- MODALE ---
+        function openTipModal(id) {
+            const entry = addresses.find(a => a.id === id);
+            if (!entry) return;
+            activeTipId = id;
+            document.getElementById('tipAddress').textContent = entry.address;
+            document.getElementById('tipInput').value = entry.tip > 0 ? entry.tip : "";
+            document.getElementById('tipModal').classList.add('modal-active');
+            setTimeout(() => document.getElementById('tipInput').focus(), 300);
+        }
+
+        function closeTipModal() {
+            document.getElementById('tipModal').classList.remove('modal-active');
+            activeTipId = null;
+        }
+
+        function confirmTip() {
+            const amount = parseFloat(document.getElementById('tipInput').value) || 0;
+            const idx = addresses.findIndex(a => a.id === activeTipId);
+            if (idx !== -1) {
+                addresses[idx].tip = amount;
+                saveAndRender();
+                showToast("Napiwek zapisany!", "banknote", "text-green-500");
+            }
+            closeTipModal();
+        }
+
+        function openEditModal(id) {
+            const entry = addresses.find(a => a.id === id);
+            if (!entry) return;
+            activeEditId = id;
+            document.getElementById('editAddressInput').value = entry.address;
+            document.getElementById('editNoteInput').value = entry.note || "";
+            document.getElementById('editModal').classList.add('modal-active');
+            setTimeout(() => document.getElementById('editAddressInput').focus(), 300);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('modal-active');
+            activeEditId = null;
+        }
+
+        function confirmEdit() {
+            const newAddress = document.getElementById('editAddressInput').value.trim();
+            const newNote = document.getElementById('editNoteInput').value.trim();
+            if (newAddress.length < 2) return showToast("Adres za krótki", "alert-triangle", "text-red-500");
+            const idx = addresses.findIndex(a => a.id === activeEditId);
+            if (idx !== -1) {
+                addresses[idx].address = newAddress;
+                addresses[idx].note = newNote;
+                saveAndRender();
+                showToast("Stop zaktualizowany!", "pencil", "text-green-500");
+            }
+            closeEditModal();
+        }
+
+        // --- TABS ---
+        function switchSettingsTab(tab) {
+            const configBtn = document.getElementById('tabBtnConfig');
+            const historyBtn = document.getElementById('tabBtnHistory');
+            const configContent = document.getElementById('tabContentConfig');
+            const historyContent = document.getElementById('tabContentHistory');
+
+            [configBtn, historyBtn].forEach(b => b.classList.remove('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red'));
+            [configBtn, historyBtn].forEach(b => b.classList.add('text-gray-400'));
+            [configContent, historyContent].forEach(c => c.classList.remove('active'));
+
+            if (tab === 'config') {
+                configBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red');
+                configBtn.classList.remove('text-gray-400');
+                configContent.classList.add('active');
+            } else {
+                historyBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red');
+                historyBtn.classList.remove('text-gray-400');
+                historyContent.classList.add('active');
+                renderHistory();
+            }
+            lucide.createIcons();
+        }
+
+        // --- HISTORY RENDERING ---
+        function renderHistory() {
+            const historyListEl = document.getElementById('historyList');
+            if (addresses.length === 0) {
+                historyListEl.innerHTML = `<div class="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-widest">Brak historii pracy</div>`;
+                return;
+            }
+
+            // Grouping by date
+            const grouped = addresses.reduce((acc, curr) => {
+                const d = curr.date;
+                if (!acc[d]) acc[d] = { 
+                    date: d, 
+                    deliveries: 0, 
+                    pickups: 0, 
+                    tips: 0, 
+                    stops: [],
+                    startTime: curr.time,
+                    endTime: curr.time
+                };
+                if (curr.type === 'pickup') acc[d].pickups++;
+                else acc[acc[d].date].deliveries++;
+                acc[d].tips += (parseFloat(curr.tip) || 0);
+                acc[d].stops.push(curr);
+                
+                // Track range
+                if (curr.time < acc[d].startTime) acc[d].startTime = curr.time;
+                if (curr.time > acc[d].endTime) acc[d].endTime = curr.time;
+
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(grouped).sort((a, b) => {
+                const parseDate = (d) => { const parts = d.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); };
+                return parseDate(b) - parseDate(a);
+            });
+
+            historyListEl.innerHTML = sortedDates.map(dateKey => {
+                const day = grouped[dateKey];
+                return `
+                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
+                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
+                        <div>
+                            <p class="text-[11px] font-black uppercase text-dpd-red leading-none mb-1">${day.date}</p>
+                            <p class="text-[9px] font-bold opacity-50 uppercase tracking-tighter">${day.startTime} - ${day.endTime}</p>
+                        </div>
+                        <div class="flex gap-2">
+                             <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 active:text-dpd-red"><i data-lucide="download" class="w-4 h-4"></i></button>
+                             <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-3 gap-2 border-t border-gray-100 dark:border-zinc-800">
+                        <div class="text-center">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Dostawy</p>
+                            <p class="text-sm font-black">${day.deliveries}</p>
+                        </div>
+                        <div class="text-center border-x border-gray-100 dark:border-zinc-800">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Odbiory</p>
+                            <p class="text-sm font-black">${day.pickups}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Napiwki</p>
+                            <p class="text-sm font-black text-green-500">${day.tips.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="hidden p-4 pt-0 space-y-2">
+                        <div class="h-[1px] bg-gray-100 dark:bg-zinc-800 mb-3"></div>
+                        ${day.stops.map(s => `
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="font-bold opacity-70">${s.time}</span>
+                                <span class="flex-1 px-2 truncate opacity-50 font-medium">${s.address}</span>
+                                <span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function exportSpecificDay(date) {
+            const dayStops = addresses.filter(a => a.date === date);
+            if (dayStops.length === 0) return;
+            // DODANO KOLUMNY GPS: Szerokość;Długość
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + dayStops.map(r => {
+                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0};${r.lat || ''};${r.lng || ''}`;
+            }).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${date.replace(/\./g, '_')}.csv`; link.click();
+            showToast("Raport dnia gotowy", "download", "text-green-500");
+        }
+
+        // --- RENDERING MAIN ---
         function saveAndRender() {
-            const today = new Date().toLocaleDateString('pl-PL');
-            const todayList = addresses.filter(a => a.date === today);
-            document.getElementById('deliveryCounter').textContent = todayList.filter(a => a.type === 'delivery').length;
-            document.getElementById('pickupCounter').textContent = todayList.filter(a => a.type === 'pickup').length;
-            document.getElementById('tipTotal').textContent = todayList.reduce((s, i) => s + (parseFloat(i.tip) || 0), 0).toFixed(2) + " zł";
+            localStorage.setItem('dpd_logs_v8', JSON.stringify(addresses));
+            const deliveryCount = addresses.filter(a => a.type === 'delivery' && a.date === new Date().toLocaleDateString('pl-PL')).length;
+            const pickupCount = addresses.filter(a => a.type === 'pickup' && a.date === new Date().toLocaleDateString('pl-PL')).length;
+            const todayTips = addresses.filter(a => a.date === new Date().toLocaleDateString('pl-PL'))
+                                       .reduce((sum, item) => sum + (parseFloat(item.tip) || 0), 0);
+            
+            document.getElementById('deliveryCounter').textContent = deliveryCount;
+            document.getElementById('pickupCounter').textContent = pickupCount;
+            document.getElementById('tipTotal').textContent = todayTips.toFixed(2) + " zł";
 
-            const listEl = document.getElementById('addressList');
-            const emptyEl = document.getElementById('emptyState');
-            if (todayList.length === 0) { listEl.innerHTML = ''; emptyEl.classList.remove('hidden'); } else {
+            const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
+            const todayAddresses = addresses.filter(a => a.date === new Date().toLocaleDateString('pl-PL'));
+            
+            if (todayAddresses.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+            } else {
                 emptyEl.classList.add('hidden');
-                listEl.innerHTML = todayList.map(item => {
-                    const isP = item.type === 'pickup';
-                    return `<li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${isP ? 'border-l-zinc-600' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
+                listEl.innerHTML = todayAddresses.map(item => {
+                    const isPickup = item.type === 'pickup';
+                    return `
+                    <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2 text-left">
                         <div class="flex justify-between items-start text-left">
                             <div class="flex-1 pr-2">
-                                <div class="flex items-center gap-2 flex-wrap text-left">
-                                    <span class="text-[8px] font-black ${isP ? 'bg-zinc-600' : 'bg-dpd-dark dark:bg-zinc-950'} text-white px-2 py-0.5 rounded italic uppercase">${isP ? 'ODBIÓR' : 'DORĘCZENIE'} ${item.time}</span>
-                                    ${item.lat ? `<svg class="w-3 h-3 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>` : ''}
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[8px] font-black ${isPickup ? 'bg-zinc-600' : 'bg-dpd-dark dark:bg-zinc-950'} text-white px-2 py-0.5 rounded italic uppercase">${isPickup ? 'ODBIÓR' : 'DORĘCZENIE'} ${item.time}</span>
+                                    ${item.lat ? `<svg class="w-3 h-3 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>` : ''}
                                     ${item.tip > 0 ? `<span class="text-[9px] font-black text-green-500 px-2 bg-green-500/10 rounded-full">+${item.tip} zł</span>` : ''}
                                 </div>
-                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-left">${item.address}</p>
+                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                             </div>
                             <div class="flex gap-1 shrink-0">
-                                <button onclick="toggleStopType('${item.id}')" class="text-gray-300 dark:text-zinc-600 p-1 ${isP ? 'text-zinc-600' : 'text-dpd-red'}"><i data-lucide="${isP ? 'truck' : 'package-plus'}" class="w-4 h-4"></i></button>
-                                <button onclick="openEditModal('${item.id}')" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                                <button onclick="openTipModal('${item.id}')" class="text-gray-300 dark:text-zinc-600 p-1 active:text-green-500"><i data-lucide="banknote" class="w-4 h-4"></i></button>
-                                <button onclick="deleteAddress('${item.id}')" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button onclick="toggleStopType(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 ${isPickup ? 'text-zinc-600' : 'text-dpd-red'}"><i data-lucide="${isPickup ? 'truck' : 'package-plus'}" class="w-4 h-4"></i></button>
+                                <button onclick="openEditModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="openTipModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-green-500"><i data-lucide="banknote" class="w-4 h-4"></i></button>
+                                <button onclick="deleteAddress(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left"><p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug">${item.note}</p></div>` : ''}
+                        ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left"><p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance text-left">${item.note}</p></div>` : ''}
                     </li>`;
                 }).join('');
             }
@@ -430,38 +715,87 @@
             if (map && currentView === 'map') renderMarkers();
         }
 
-        // --- HISTORY ---
-        function switchSettingsTab(t) { ['Config','History'].forEach(k => { document.getElementById('tabBtn'+k).className = `flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${t === k.toLowerCase() ? 'bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'text-gray-400'}`; document.getElementById('tabContent'+k).className = `tab-content ${t === k.toLowerCase() ? 'active' : ''}`; }); if(t === 'history') renderHistory(); lucide.createIcons(); }
-        function renderHistory() {
-            const hEl = document.getElementById('historyList');
-            const g = addresses.reduce((a,c) => { const d=c.date; if(!a[d]) a[d]={date:d, d:0, p:0, t:0, s:[], st:c.time, et:c.time}; if(c.type==='pickup') a[d].p++; else a[d].d++; a[d].t+=(parseFloat(c.tip)||0); a[d].s.push(c); if(c.time < a[d].st) a[d].st=c.time; if(c.time > a[d].et) a[d].et=c.time; return a; }, {});
-            const sorted = Object.keys(g).sort((a,b) => { const p = d => { const s = d.split('.'); return new Date(s[2], s[1]-1, s[0]); }; return p(b) - p(a); });
-            hEl.innerHTML = sorted.map(k => { const d = g[k]; return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4"><div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20"><div><p class="text-[11px] font-black uppercase text-dpd-red leading-none mb-1">${d.date}</p><p class="text-[9px] font-bold opacity-50 uppercase tracking-tighter">${d.st} - ${d.et}</p></div><div class="flex gap-2"><button onclick="exportDay('${d.date}')" class="p-2 text-gray-400 active:text-dpd-red"><i data-lucide="download" class="w-4 h-4"></i></button><button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button></div></div><div class="p-4 grid grid-cols-3 gap-2 border-t border-gray-100 dark:border-zinc-800 text-center"><div class="text-left"><p class="text-[8px] font-bold opacity-40 uppercase">Dostawy</p><p class="text-sm font-black">${d.d}</p></div><div class="border-x border-gray-100 dark:border-zinc-800 text-center"><p class="text-[8px] font-bold opacity-40 uppercase">Odbiory</p><p class="text-sm font-black">${d.p}</p></div><div class="text-right"><p class="text-[8px] font-bold opacity-40 uppercase">Napiwki</p><p class="text-sm font-black text-green-500">${d.t.toFixed(2)}</p></div></div><div class="hidden p-4 pt-0 space-y-2"><div class="h-[1px] bg-gray-100 dark:bg-zinc-800 mb-3 text-left"></div>${d.s.map(s => `<div class="flex justify-between items-center text-[10px] text-left text-balance"><span class="font-bold opacity-70">${s.time}</span><span class="flex-1 px-2 truncate opacity-50 font-medium">${s.address}</span><span class="font-black ${s.type==='pickup'?'text-zinc-400':'text-dpd-red'}">${s.type==='pickup'?'O':'D'}</span></div>`).join('')}</div></div>`; }).join(''); lucide.createIcons();
+        // --- MAP ENGINE ---
+        function initMap() {
+            if (map) return;
+            map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
         }
 
-        // --- MAP ---
-        function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
-        function toggleView(v) { ['listView','mapView','settingsView'].forEach(i => document.getElementById(i).classList.add('view-hidden')); document.getElementById(v+'View').classList.remove('view-hidden'); document.getElementById('bottomBar').classList.toggle('translate-y-40', v==='settings'); document.getElementById('headerActions').classList.toggle('opacity-0', v==='settings'); currentView = v; if(v==='map'){ if(!map){ map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); markersGroup = L.layerGroup().addTo(map); } setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 150); } lucide.createIcons(); }
-        function renderMarkers() { if (!markersGroup || !map) return; markersGroup.clearLayers(); const today = new Date().toLocaleDateString('pl-PL'); const v = addresses.filter(a => a.lat && a.lng && a.date === today); if (v.length === 0) return; const b = L.latLngBounds(); v.forEach(p => { const marker = L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: p.type==='pickup'?"#52525b":"#dc0032", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(markersGroup); marker.bindPopup(`<b>${p.time}</b><br>${p.address}`); b.extend([p.lat, p.lng]); }); map.fitBounds(b, { padding: [50, 50] }); }
+        function renderMarkers() {
+            if (!markersGroup || !map) return;
+            markersGroup.clearLayers();
+            const validPoints = addresses.filter(a => a.lat && a.lng && a.date === new Date().toLocaleDateString('pl-PL'));
+            if (validPoints.length === 0) return;
+            const bounds = L.latLngBounds();
+            validPoints.forEach(p => {
+                const color = p.type === 'pickup' ? "#52525b" : "#dc0032";
+                const marker = L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: color, color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(markersGroup);
+                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
+                bounds.extend([p.lat, p.lng]);
+            });
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
 
-        // --- UTILS ---
-        function applySettings() { config.name = document.getElementById('setCourierName').value; config.stopWord = document.getElementById('setStopWord').value || "notatka"; config.gpsEnabled = document.getElementById('setGpsEnabled').checked; localStorage.setItem('dpd_config_v4', JSON.stringify(config)); document.getElementById('headerName').textContent = config.name ? `Kurier: ${config.name}` : "Licznik Stopów"; }
-        function exportDay(d) { const s = addresses.filter(a => a.date === d); let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Lat;Lng\n" + s.map(r => `${r.date};${r.time};${r.type==='pickup'?'Odbiór':'Doręczenie'};"${r.address}";"${r.note||''}";${r.tip||0};${r.lat||''};${r.lng||''}`).join("\n"); const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = `Raport_DPD_${d.replace(/\./g,'_')}.csv`; l.click(); }
-        function exportToCSV() { exportDay(new Date().toLocaleDateString('pl-PL')); }
-        function showToast(m, i="info", c="text-blue-500") { const t = document.getElementById('toast'); document.getElementById('toastText').textContent = m; const iE = document.getElementById('toastIcon'); iE.setAttribute('data-lucide', i); iE.className = `w-4 h-4 ${c}`; lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2500); }
-        function shareApp() { navigator.share ? navigator.share({ title: 'DPD Kurier Log', url: window.location.href }) : showToast("Skopiuj link", "info", "text-blue-500"); }
-
-        // --- INIT ---
-        window.onload = () => {
-            initCloud();
+        // --- UI ACTIONS ---
+        function initSettingsUI() {
             document.getElementById('setCourierName').value = config.name;
             document.getElementById('setStopWord').value = config.stopWord;
             document.getElementById('setGpsEnabled').checked = config.gpsEnabled;
-            applySettings();
+            document.getElementById('setCourierName').addEventListener('input', applySettings);
+            document.getElementById('setStopWord').addEventListener('input', applySettings);
             refreshTheme();
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            document.body.addEventListener('click', async () => { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen').catch(()=>{}); document.getElementById('wakeDot').classList.replace('bg-red-500', 'bg-green-500'); document.getElementById('wakeText').textContent = 'Blokada: WŁ'; } document.getElementById('noSleepVideo').play().catch(()=>{}); }, { once: true });
-        };
+        }
+
+        function applySettings() {
+            config.name = document.getElementById('setCourierName').value;
+            config.stopWord = document.getElementById('setStopWord').value || "notatka";
+            config.gpsEnabled = document.getElementById('setGpsEnabled').checked;
+            localStorage.setItem('dpd_config_v4', JSON.stringify(config));
+            document.getElementById('headerName').textContent = config.name ? `Kurier: ${config.name}` : "Licznik Stopów";
+        }
+
+        function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
+        function toggleView(view) {
+            const views = { list: 'listView', map: 'mapView', settings: 'settingsView' };
+            Object.values(views).forEach(id => document.getElementById(id).classList.add('view-hidden'));
+            document.getElementById(views[view]).classList.remove('view-hidden');
+            document.getElementById('bottomBar').classList.toggle('translate-y-40', view === 'settings');
+            document.getElementById('headerActions').classList.toggle('opacity-0', view === 'settings');
+            currentView = view;
+            if (view === 'map') { initMap(); setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 150); }
+            if (view === 'settings') switchSettingsTab('config');
+            lucide.createIcons();
+        }
+
+        function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
+        function clearData() { if (confirm("Wyczyścić dzisiejszą listę?")) { addresses = addresses.filter(a => a.date !== new Date().toLocaleDateString('pl-PL')); saveAndRender(); } }
+        function showToast(msg, icon = "info", colorClass = "text-blue-500") {
+            const t = document.getElementById('toast'); document.getElementById('toastText').textContent = msg;
+            const iconEl = document.getElementById('toastIcon'); iconEl.setAttribute('data-lucide', icon); iconEl.className = `w-4 h-4 ${colorClass}`;
+            lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2500);
+        }
+
+        function exportToCSV() {
+            if (addresses.length === 0) return;
+            const today = new Date().toLocaleDateString('pl-PL');
+            const todayStops = addresses.filter(a => a.date === today);
+            // DODANO KOLUMNY GPS: Szerokość;Długość
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + todayStops.map(r => {
+                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0};${r.lat || ''};${r.lng || ''}`;
+            }).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${today}.csv`; link.click();
+        }
+
+        function shareApp() { navigator.share ? navigator.share({ title: 'Licznik Stopów DPD', url: window.location.href }) : showToast("Skopiuj link", "info", "text-blue-500"); }
+
+        document.body.addEventListener('click', () => { requestWakeLock(); prefetchGps(); }, { once: true });
+        initSettingsUI(); saveAndRender();
+        setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
+        setInterval(() => { document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }); }, 10000);
     </script>
 </body>
 </html>
