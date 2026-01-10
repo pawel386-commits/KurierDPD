@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kurier Log">
     
-    <!-- System Theme Color - Controls Notch area on iOS -->
+    <!-- Kolor paska systemowego - kontroluje obszar Notch na iOS -->
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +36,7 @@
     <style>
         :root { --dpd-red: #dc0032; }
         
-        /* Force red background behind Notch on iOS */
+        /* Wymuszenie czerwonego tła za Notchem na iOS */
         html {
             background-color: var(--dpd-red);
             transition: background-color 0.3s ease;
@@ -182,7 +182,7 @@
         </div>
     </main>
 
-    <!-- Bottom Panel -->
+    <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -199,7 +199,7 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
-        <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-dpd-red"></i><span id="toastText"></span>
+        <i data-lucide="info" id="toastIcon" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
@@ -218,7 +218,7 @@
 
         lucide.createIcons();
 
-        // --- THEME ---
+        // --- MOTYW ---
         function refreshTheme() {
             let target = config.theme;
             if (config.theme === 'auto') {
@@ -280,7 +280,7 @@
             }
         }
 
-        // --- SPEECH RECOGNITION ---
+        // --- ROZPOZNAWANIE MOWY ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -291,7 +291,10 @@
 
             recognition.onstart = () => {
                 isRecording = true;
+                // RESET: Czyszczenie starego tekstu przy każdym starcie mikrofonu
                 lastTranscript = "";
+                document.getElementById('liveText').textContent = "Słucham...";
+                
                 requestWakeLock();
                 prefetchGps();
                 document.getElementById('micBtn').classList.add('pulse-red');
@@ -337,37 +340,23 @@
         }
 
         function toggleRecognition() {
-            if (!recognition) return showToast("Brak mowy");
+            if (!recognition) return showToast("Brak mowy", "info", "text-blue-500");
             isRecording ? recognition.stop() : recognition.start();
         }
 
         // --- CORE LOGIC: ADRESY I LICZBY ---
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
-            
-            // 1. Łączymy rozdzielone końcówki "naście" (np. "3 naście" -> "3naście")
             t = t.replace(/(\w+|[0-9]+)\s+(naście|dzieścia|dzieści|dziesiąt)/g, '$1$2');
-
             const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
             Object.keys(numMap).forEach(word => { t = t.replace(new RegExp(`\\b${word}\\b`, 'g'), numMap[word]); });
-            
-            // 2. Zamiana słowna na cyfry
             t = t.replace(/1naście/g, '11').replace(/2naście/g, '12').replace(/3naście/g, '13').replace(/4naście/g, '14').replace(/5naście/g, '15').replace(/6naście/g, '16').replace(/7naście/g, '17').replace(/8naście/g, '18').replace(/9naście/g, '19')
                  .replace(/jednaście/g, '11').replace(/dwanaście/g, '12').replace(/trzynaście/g, '13').replace(/czternaście/g, '14').replace(/piętnaście/g, '15').replace(/szesnaście/g, '16').replace(/siedemnaście/g, '17').replace(/osiemnaście/g, '18').replace(/dziewiętnaście/g, '19');
-
             t = t.replace(/2dzieścia/g, '20').replace(/3dzieści/g, '30').replace(/4dzieści/g, '40').replace(/5dziesiąt/g, '50').replace(/6dziesiąt/g, '60').replace(/7dziesiąt/g, '70').replace(/8dziesiąt/g, '80').replace(/9dziesiąt/g, '90');
-            
             t = t.replace(/(20|30|40|50|60|70|80|90)\s+([1-9])/g, (match, p1, p2) => parseInt(p1) + parseInt(p2));
-
-            // 3. ŁĄCZENIE CYFR Z LITERAMI (np. "12 a" -> "12a") - KLUCZOWE DLA IPHONE
             t = t.replace(/(\d+)\s+([a-z])\b/gi, '$1$2');
-
-            // 4. OBSŁUGA UKOŚNIKA (przez, łamane, na)
             t = t.replace(/(\d+[a-z]*)\s*(przez|łamane na|łamane|na|mieszkania|lokalu|mieszkanie)[\s\.]*(\d+[a-z]*)/gi, '$1/$3');
-            
-            // Czyszczenie zbędnych spacji przy ukośnikach
             t = t.replace(/([0-9a-z]+)\s*\/\s*([0-9a-z]+)/gi, '$1/$2');
-            
             return t;
         }
 
@@ -408,7 +397,9 @@
 
             addresses.unshift(entry);
             saveAndRender();
-            showToast("Stop dodany!", "check-circle");
+            
+            // POWIADOMIENIE: Ikona check-circle ma być zielona (text-green-500)
+            showToast("Stop dodany!", "check-circle", "text-green-500");
 
             if (config.gpsEnabled && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
@@ -526,10 +517,17 @@
 
         function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
         function clearData() { if (confirm("Wyczyścić listę?")) { addresses = []; saveAndRender(); } }
-        function showToast(msg, icon = "info") {
-            const t = document.getElementById('toast'); document.getElementById('toastText').textContent = msg;
-            const iconEl = document.getElementById('toastIcon'); iconEl.setAttribute('data-lucide', icon);
-            lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2500);
+        
+        // Zmodyfikowana funkcja Toast z obsługą koloru ikonki
+        function showToast(msg, icon = "info", colorClass = "text-blue-500") {
+            const t = document.getElementById('toast');
+            document.getElementById('toastText').textContent = msg;
+            const iconEl = document.getElementById('toastIcon');
+            iconEl.setAttribute('data-lucide', icon);
+            iconEl.className = `w-4 h-4 ${colorClass}`;
+            lucide.createIcons();
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 2500);
         }
 
         function exportToCSV() {
@@ -539,7 +537,7 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD.csv`; link.click();
         }
 
-        function shareApp() { navigator.share ? navigator.share({ title: 'Licznik Stopów DPD', url: window.location.href }) : showToast("Skopiuj link"); }
+        function shareApp() { navigator.share ? navigator.share({ title: 'Licznik Stopów DPD', url: window.location.href }) : showToast("Skopiuj link", "info", "text-blue-500"); }
 
         document.body.addEventListener('click', () => { requestWakeLock(); prefetchGps(); }, { once: true });
         initSettingsUI(); saveAndRender();
