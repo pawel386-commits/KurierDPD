@@ -82,6 +82,14 @@
         .modal-active > div {
             transform: scale(1) !important;
         }
+
+        /* Tabs transition */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
@@ -165,36 +173,55 @@
             <div id="map"></div>
         </div>
 
-        <!-- Settings View -->
-        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 p-6 overflow-y-auto view-hidden pb-40 text-left">
-            <div class="header-safe-area"></div>
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
-                <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90"><i data-lucide="x"></i></button>
+        <!-- Settings & History View -->
+        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden">
+            <div class="header-safe-area flex-none"></div>
+            
+            <!-- Sub-navigation Tabs -->
+            <div class="p-4 pb-0 flex-none">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tight">Panel Sterowania</h2>
+                    <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+                <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4">
+                    <button onclick="switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Ustawienia</button>
+                    <button onclick="switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400">Historia dni</button>
+                </div>
             </div>
-            <div class="space-y-6">
-                <section class="space-y-4">
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
-                        <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+
+            <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40">
+                <!-- Tab: Config -->
+                <div id="tabContentConfig" class="tab-content active space-y-6">
+                    <section class="space-y-4">
+                        <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-balance">
+                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Imię Kuriera</label>
+                            <input type="text" id="setCourierName" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                        </div>
+                        <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-balance">
+                            <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
+                            <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                        </div>
+                    </section>
+                    <section class="grid grid-cols-3 gap-2 text-left">
+                        <button id="btnLight" onclick="setThemeMode('light')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Jasny</button>
+                        <button id="btnDark" onclick="setThemeMode('dark')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Ciemny</button>
+                        <button id="btnAuto" onclick="setThemeMode('auto')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Auto</button>
+                    </section>
+                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <span class="text-sm font-bold">Używaj GPS</span>
+                        <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
+                    </label>
+                    <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
+                    </button>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tabContentHistory" class="tab-content space-y-4">
+                    <div id="historyList" class="space-y-4">
+                        <!-- History items will be injected here -->
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1">Hasło notatki (słowo-klucz)</label>
-                        <input type="text" id="setStopWord" placeholder="Np. notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
-                    </div>
-                </section>
-                <section class="grid grid-cols-3 gap-2 text-left">
-                    <button id="btnLight" onclick="setThemeMode('light')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Jasny</button>
-                    <button id="btnDark" onclick="setThemeMode('dark')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Ciemny</button>
-                    <button id="btnAuto" onclick="setThemeMode('auto')" class="p-3 rounded-xl border-2 bg-gray-50 dark:bg-zinc-900 text-[10px] font-bold uppercase transition-all">Auto</button>
-                </section>
-                <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                    <span class="text-sm font-bold">Używaj GPS</span>
-                    <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
-                </label>
-                <button onclick="shareApp()" class="w-full bg-dpd-dark dark:bg-zinc-800 text-white p-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <i data-lucide="share-2" class="w-4 h-4"></i> Udostępnij aplikację
-                </button>
+                </div>
             </div>
         </div>
     </main>
@@ -202,8 +229,8 @@
     <!-- Napiwek Modal -->
     <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
-            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
-            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
+            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left">Napiwek</h3>
+            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate text-left"></p>
             <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none text-left">
             <div class="flex gap-3">
                 <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px]">Anuluj</button>
@@ -215,15 +242,15 @@
     <!-- Edycja Stopu Modal -->
     <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
-            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
+            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red text-left">Edytuj Stop</h3>
             <div class="space-y-4">
                 <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
                     <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
-                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
                 </div>
                 <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
                     <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
-                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug"></textarea>
+                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug text-left"></textarea>
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
@@ -335,7 +362,7 @@
             }
         }
 
-        // --- SPEECH RECOGNITION ---
+        // --- ROZPOZNAWANIE MOWY ---
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -439,7 +466,7 @@
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString('pl-PL'),
                 address, note, tip: 0, 
-                type: 'delivery', // Domyślnie Doręczenie
+                type: 'delivery', 
                 lat: cachedGps ? cachedGps.lat : null, lng: cachedGps ? cachedGps.lng : null
             };
             addresses.unshift(entry);
@@ -459,7 +486,6 @@
             }
         }
 
-        // --- LOGIKA TYPU STOPU ---
         function toggleStopType(id) {
             const idx = addresses.findIndex(a => a.id === id);
             if (idx !== -1) {
@@ -524,67 +550,166 @@
             closeEditModal();
         }
 
-        // --- RENDERING ---
+        // --- TABS ---
+        function switchSettingsTab(tab) {
+            const configBtn = document.getElementById('tabBtnConfig');
+            const historyBtn = document.getElementById('tabBtnHistory');
+            const configContent = document.getElementById('tabContentConfig');
+            const historyContent = document.getElementById('tabContentHistory');
+
+            [configBtn, historyBtn].forEach(b => b.classList.remove('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red'));
+            [configBtn, historyBtn].forEach(b => b.classList.add('text-gray-400'));
+            [configContent, historyContent].forEach(c => c.classList.remove('active'));
+
+            if (tab === 'config') {
+                configBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red');
+                configBtn.classList.remove('text-gray-400');
+                configContent.classList.add('active');
+            } else {
+                historyBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-dpd-red');
+                historyBtn.classList.remove('text-gray-400');
+                historyContent.classList.add('active');
+                renderHistory();
+            }
+            lucide.createIcons();
+        }
+
+        // --- HISTORY RENDERING ---
+        function renderHistory() {
+            const historyListEl = document.getElementById('historyList');
+            if (addresses.length === 0) {
+                historyListEl.innerHTML = `<div class="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-widest">Brak historii pracy</div>`;
+                return;
+            }
+
+            // Grouping by date
+            const grouped = addresses.reduce((acc, curr) => {
+                const d = curr.date;
+                if (!acc[d]) acc[d] = { 
+                    date: d, 
+                    deliveries: 0, 
+                    pickups: 0, 
+                    tips: 0, 
+                    stops: [],
+                    startTime: curr.time,
+                    endTime: curr.time
+                };
+                if (curr.type === 'pickup') acc[d].pickups++;
+                else acc[acc[d].date].deliveries++;
+                acc[d].tips += (parseFloat(curr.tip) || 0);
+                acc[d].stops.push(curr);
+                
+                // Track range
+                if (curr.time < acc[d].startTime) acc[d].startTime = curr.time;
+                if (curr.time > acc[d].endTime) acc[d].endTime = curr.time;
+
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(grouped).sort((a, b) => {
+                const parseDate = (d) => { const parts = d.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); };
+                return parseDate(b) - parseDate(a);
+            });
+
+            historyListEl.innerHTML = sortedDates.map(dateKey => {
+                const day = grouped[dateKey];
+                return `
+                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
+                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
+                        <div>
+                            <p class="text-[11px] font-black uppercase text-dpd-red leading-none mb-1">${day.date}</p>
+                            <p class="text-[9px] font-bold opacity-50 uppercase tracking-tighter">${day.startTime} - ${day.endTime}</p>
+                        </div>
+                        <div class="flex gap-2">
+                             <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 active:text-dpd-red"><i data-lucide="download" class="w-4 h-4"></i></button>
+                             <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-3 gap-2 border-t border-gray-100 dark:border-zinc-800">
+                        <div class="text-center">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Dostawy</p>
+                            <p class="text-sm font-black">${day.deliveries}</p>
+                        </div>
+                        <div class="text-center border-x border-gray-100 dark:border-zinc-800">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Odbiory</p>
+                            <p class="text-sm font-black">${day.pickups}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Napiwki</p>
+                            <p class="text-sm font-black text-green-500">${day.tips.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="hidden p-4 pt-0 space-y-2">
+                        <div class="h-[1px] bg-gray-100 dark:bg-zinc-800 mb-3"></div>
+                        ${day.stops.map(s => `
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="font-bold opacity-70">${s.time}</span>
+                                <span class="flex-1 px-2 truncate opacity-50 font-medium">${s.address}</span>
+                                <span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function exportSpecificDay(date) {
+            const dayStops = addresses.filter(a => a.date === date);
+            if (dayStops.length === 0) return;
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + dayStops.map(r => {
+                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
+                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0}`;
+            }).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${date.replace(/\./g, '_')}.csv`; link.click();
+            showToast("Raport dnia gotowy", "download", "text-green-500");
+        }
+
+        // --- RENDERING MAIN ---
         function saveAndRender() {
             localStorage.setItem('dpd_logs_v8', JSON.stringify(addresses));
-            
-            // Liczniki
-            const deliveryCount = addresses.filter(a => a.type === 'delivery').length;
-            const pickupCount = addresses.filter(a => a.type === 'pickup').length;
-            const totalTipAmount = addresses.reduce((sum, item) => sum + (parseFloat(item.tip) || 0), 0);
+            const deliveryCount = addresses.filter(a => a.type === 'delivery' && a.date === new Date().toLocaleDateString('pl-PL')).length;
+            const pickupCount = addresses.filter(a => a.type === 'pickup' && a.date === new Date().toLocaleDateString('pl-PL')).length;
+            const todayTips = addresses.filter(a => a.date === new Date().toLocaleDateString('pl-PL'))
+                                       .reduce((sum, item) => sum + (parseFloat(item.tip) || 0), 0);
             
             document.getElementById('deliveryCounter').textContent = deliveryCount;
             document.getElementById('pickupCounter').textContent = pickupCount;
-            document.getElementById('tipTotal').textContent = totalTipAmount.toFixed(2) + " zł";
+            document.getElementById('tipTotal').textContent = todayTips.toFixed(2) + " zł";
 
             const listEl = document.getElementById('addressList'), emptyEl = document.getElementById('emptyState');
-            if (addresses.length === 0) {
+            const todayAddresses = addresses.filter(a => a.date === new Date().toLocaleDateString('pl-PL'));
+            
+            if (todayAddresses.length === 0) {
                 listEl.innerHTML = '';
                 emptyEl.classList.remove('hidden');
-                return;
-            }
-            emptyEl.classList.add('hidden');
-            listEl.innerHTML = addresses.map(item => {
-                const isPickup = item.type === 'pickup';
-                const borderColorClass = isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red';
-                const labelBgClass = isPickup ? 'bg-zinc-600' : 'bg-dpd-dark dark:bg-zinc-950';
-                const labelText = isPickup ? 'ODBIÓR' : 'DORĘCZENIE';
-                
-                return `
-                <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${borderColorClass} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2 transition-all">
-                    <div class="flex justify-between items-start text-left">
-                        <div class="flex-1 pr-2">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-[8px] font-black ${labelBgClass} text-white px-2 py-0.5 rounded italic uppercase">${labelText} ${item.time}</span>
-                                ${item.lat !== null ? `
-                                    <svg class="w-3 h-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-                                    </svg>
-                                ` : ''}
-                                ${item.tip > 0 ? `<span class="text-[9px] font-black text-green-500 px-2 bg-green-500/10 rounded-full">+${item.tip} zł</span>` : ''}
+            } else {
+                emptyEl.classList.add('hidden');
+                listEl.innerHTML = todayAddresses.map(item => {
+                    const isPickup = item.type === 'pickup';
+                    return `
+                    <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${isPickup ? 'border-l-zinc-600' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 flex flex-col gap-2">
+                        <div class="flex justify-between items-start text-left">
+                            <div class="flex-1 pr-2">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[8px] font-black ${isPickup ? 'bg-zinc-600' : 'bg-dpd-dark dark:bg-zinc-950'} text-white px-2 py-0.5 rounded italic uppercase">${isPickup ? 'ODBIÓR' : 'DORĘCZENIE'} ${item.time}</span>
+                                    ${item.lat ? `<svg class="w-3 h-3 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>` : ''}
+                                    ${item.tip > 0 ? `<span class="text-[9px] font-black text-green-500 px-2 bg-green-500/10 rounded-full">+${item.tip} zł</span>` : ''}
+                                </div>
+                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
                             </div>
-                            <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-balance text-left">${item.address}</p>
+                            <div class="flex gap-1 shrink-0">
+                                <button onclick="toggleStopType(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 ${isPickup ? 'text-zinc-600' : 'text-dpd-red'}"><i data-lucide="${isPickup ? 'truck' : 'package-plus'}" class="w-4 h-4"></i></button>
+                                <button onclick="openEditModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="openTipModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-green-500"><i data-lucide="banknote" class="w-4 h-4"></i></button>
+                                <button onclick="deleteAddress(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
                         </div>
-                        <div class="flex gap-1 shrink-0">
-                            <button onclick="toggleStopType(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:scale-90 transition-all ${isPickup ? 'text-zinc-600' : 'text-dpd-red'}" title="Zmień typ">
-                                <i data-lucide="${isPickup ? 'truck' : 'package-plus'}" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="openEditModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors">
-                                <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="openTipModal(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-green-500 transition-colors">
-                                <i data-lucide="banknote" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteAddress(${item.id})" class="text-gray-300 dark:text-zinc-600 p-1 active:text-dpd-red transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                    ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left">
-                        <p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance text-left">${item.note}</p>
-                    </div>` : ''}
-                </li>`;
-            }).join('');
+                        ${item.note ? `<div class="bg-gray-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-gray-100 dark:border-zinc-800 text-left"><p class="text-[11px] text-gray-500 dark:text-zinc-400 italic leading-snug text-balance text-left">${item.note}</p></div>` : ''}
+                    </li>`;
+                }).join('');
+            }
             lucide.createIcons();
             if (map && currentView === 'map') renderMarkers();
         }
@@ -600,15 +725,13 @@
         function renderMarkers() {
             if (!markersGroup || !map) return;
             markersGroup.clearLayers();
-            const validPoints = addresses.filter(a => a.lat && a.lng);
+            const validPoints = addresses.filter(a => a.lat && a.lng && a.date === new Date().toLocaleDateString('pl-PL'));
             if (validPoints.length === 0) return;
             const bounds = L.latLngBounds();
             validPoints.forEach(p => {
                 const color = p.type === 'pickup' ? "#52525b" : "#dc0032";
-                const marker = L.circleMarker([p.lat, p.lng], { 
-                    radius: 8, fillColor: color, color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 
-                }).addTo(markersGroup);
-                marker.bindPopup(`<b>${p.time} [${p.type === 'pickup' ? 'Odbiór' : 'Doręczenie'}]</b><br>${p.address}`);
+                const marker = L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: color, color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(markersGroup);
+                marker.bindPopup(`<b>${p.time}</b><br>${p.address}`);
                 bounds.extend([p.lat, p.lng]);
             });
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -630,7 +753,6 @@
             config.gpsEnabled = document.getElementById('setGpsEnabled').checked;
             localStorage.setItem('dpd_config_v4', JSON.stringify(config));
             document.getElementById('headerName').textContent = config.name ? `Kurier: ${config.name}` : "Licznik Stopów";
-            refreshTheme();
         }
 
         function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
@@ -641,40 +763,26 @@
             document.getElementById('bottomBar').classList.toggle('translate-y-40', view === 'settings');
             document.getElementById('headerActions').classList.toggle('opacity-0', view === 'settings');
             currentView = view;
-            if (view === 'map') { 
-                initMap(); 
-                document.getElementById('toggleText').textContent = 'Lista'; 
-                document.getElementById('toggleIcon').setAttribute('data-lucide', 'list');
-                setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 150);
-            } else {
-                document.getElementById('toggleText').textContent = 'Mapa'; 
-                document.getElementById('toggleIcon').setAttribute('data-lucide', 'map');
-            }
+            if (view === 'map') { initMap(); setTimeout(() => { map.invalidateSize(); renderMarkers(); }, 150); }
+            if (view === 'settings') switchSettingsTab('config');
             lucide.createIcons();
         }
 
         function deleteAddress(id) { if (confirm("Usunąć ten stop?")) { addresses = addresses.filter(a => a.id !== id); saveAndRender(); } }
-        function clearData() { if (confirm("Wyczyścić listę?")) { addresses = []; saveAndRender(); } }
-        
+        function clearData() { if (confirm("Wyczyścić dzisiejszą listę?")) { addresses = addresses.filter(a => a.date !== new Date().toLocaleDateString('pl-PL')); saveAndRender(); } }
         function showToast(msg, icon = "info", colorClass = "text-blue-500") {
-            const t = document.getElementById('toast');
-            document.getElementById('toastText').textContent = msg;
-            const iconEl = document.getElementById('toastIcon');
-            iconEl.setAttribute('data-lucide', icon);
-            iconEl.className = `w-4 h-4 ${colorClass}`;
-            lucide.createIcons();
-            t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 2500);
+            const t = document.getElementById('toast'); document.getElementById('toastText').textContent = msg;
+            const iconEl = document.getElementById('toastIcon'); iconEl.setAttribute('data-lucide', icon); iconEl.className = `w-4 h-4 ${colorClass}`;
+            lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2500);
         }
 
         function exportToCSV() {
             if (addresses.length === 0) return;
-            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + addresses.map(r => {
-                const type = r.type === 'pickup' ? 'Odbiór' : 'Doręczenie';
-                return `${r.date};${r.time};${type};"${r.address}";"${r.note || ''}";${r.tip || 0}`;
-            }).join("\n");
+            const today = new Date().toLocaleDateString('pl-PL');
+            const todayStops = addresses.filter(a => a.date === today);
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek\n" + todayStops.map(r => `${r.date};${r.time};${r.type === 'pickup' ? 'Odbiór' : 'Doręczenie'};"${r.address}";"${r.note || ''}";${r.tip || 0}`).join("\n");
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD.csv`; link.click();
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Raport_DPD_${today}.csv`; link.click();
         }
 
         function shareApp() { navigator.share ? navigator.share({ title: 'Licznik Stopów DPD', url: window.location.href }) : showToast("Skopiuj link", "info", "text-blue-500"); }
@@ -682,9 +790,7 @@
         document.body.addEventListener('click', () => { requestWakeLock(); prefetchGps(); }, { once: true });
         initSettingsUI(); saveAndRender();
         setInterval(() => { if (config.theme === 'auto') refreshTheme(); }, 60000);
-        setInterval(() => {
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }, 10000);
+        setInterval(() => { document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }); }, 10000);
     </script>
 </body>
 </html>
