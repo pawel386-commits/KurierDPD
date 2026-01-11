@@ -66,6 +66,7 @@
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
+    <!-- Nagłówek -->
     <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none">
         <div class="header-safe-area"></div>
         <div class="p-4 pt-2 pb-4 text-left">
@@ -81,10 +82,12 @@
                 </div>
                 <div class="flex flex-col items-end gap-2 text-right">
                     <div class="flex items-center gap-1.5 justify-end">
+                        <!-- Status AI -->
                         <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
                             <span id="aiStatusLabel">AI: OK</span>
                         </div>
+                        <!-- Blokada ekranu -->
                         <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
                         </div>
@@ -104,6 +107,7 @@
                 </div>
             </div>
             
+            <!-- Trzy osobne karty liczników -->
             <div class="mt-4 grid grid-cols-3 gap-2">
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
                     <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Doręczenia</span>
@@ -122,6 +126,7 @@
     </header>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
+        <!-- Widok Listy -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -137,24 +142,29 @@
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
 
+        <!-- Widok Mapy -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
+        <!-- Widok Ustawień -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
             <div class="header-safe-area flex-none"></div>
             <div class="p-4 flex-none">
-                <div class="flex justify-between items-center mb-6 text-left">
-                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Ustawienia</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
                     <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
-                <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4 text-left">
-                    <button onclick="window.switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
-                    <button onclick="window.switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400">Historia dni</button>
+                <!-- Zakładki w ustawieniach -->
+                <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4 overflow-x-auto no-scrollbar">
+                    <button onclick="window.switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
+                    <button onclick="window.switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400">Historia dni</button>
+                    <button onclick="window.switchSettingsTab('doc')" id="tabBtnDoc" class="flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400">Dokumentacja</button>
                 </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left">
+                <!-- Tab: Konfiguracja -->
                 <div id="tabContentConfig" class="tab-content active space-y-6">
                     <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
                         <div class="flex flex-col text-left">
@@ -192,13 +202,31 @@
                     </label>
                     <button onclick="window.confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
                 </div>
+                <!-- Tab: Historia -->
                 <div id="tabContentHistory" class="tab-content space-y-4">
                     <div id="historyList" class="space-y-4"></div>
+                </div>
+                <!-- Tab: Dokumentacja -->
+                <div id="tabContentDoc" class="tab-content space-y-4">
+                    <div class="bg-gray-50 dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <h3 class="text-xs font-black uppercase text-dpd-red mb-3">Strażnik Funkcji v1.0</h3>
+                        <ul class="space-y-3 text-[10px] font-bold text-gray-500 dark:text-zinc-400">
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Nagłówek:</b> Trzy osobne karty (Doręczenia, Odbiór, Napiwki). Brak daty u góry.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>AI Engine:</b> Model gemma-3-27b z przełącznikiem Włącz/Wyłącz w ustawieniach.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Lokalizacja:</b> Auto-pobieranie miasta z GPS + geokodowanie stopów w tle.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Mapa:</b> Leaflet z klastrowaniem punktów i dynamicznym fitBounds.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>iPhone Fix:</b> Wszystkie funkcje w zasięgu window. Globalna obsługa zdarzeń.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Motyw:</b> Jasny / Ciemny / Auto (Wschód-Zachód). Etykieta Auto pod ikoną.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Stabilność:</b> Natychmiastowe dodawanie stopu do listy przed geokodowaniem.</span></li>
+                        </ul>
+                        <p class="mt-4 text-[8px] opacity-40 uppercase font-black text-center">Zakaz usuwania powyższych bez polecenia</p>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Modale -->
     <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
             <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left">Napiwek</h3>
@@ -211,6 +239,7 @@
         </div>
     </div>
 
+    <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
@@ -233,12 +262,16 @@
         </div>
     </div>
 
+    <!-- Toast -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
         <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
+        // API KEY INJECTED AT RUNTIME
         const apiKey = ""; 
+
+        // STATE MANAGEMENT
         let addresses = [];
         try { addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]'); } catch(e) { addresses = []; }
         
@@ -250,11 +283,13 @@
         let wakeLock = null, currentView = 'list', map = null, markersGroup = null, cachedGps = null;
         let activeTipId = null, sunTimes = null;
 
+        // DATE UTILS
         function getTodayStr() {
             const d = new Date();
             return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
         }
 
+        // GLOBAL UI HANDLERS (EXPLICIT WINDOW ASSIGNMENT FOR IPHONE)
         window.setAIStatusUI = function() {
             const dot = document.getElementById('aiDot');
             const label = document.getElementById('aiStatusLabel');
@@ -294,6 +329,7 @@
             setTimeout(() => t.style.opacity = '0', 2500);
         };
 
+        // GPS & LOCATION
         window.updateCityFromGps = function() {
             if (!navigator.geolocation) return;
             window.showToast("Pobieram miasto...", "map-pin", "text-blue-500");
@@ -309,7 +345,7 @@
                         window.showToast(`Ustawiono: ${city}`, "check", "text-green-500");
                         sunTimes = null; window.refreshTheme();
                     }
-                } catch(e) { window.showToast("Błąd GPS", "x", "text-red-500"); }
+                } catch(e) { window.showToast("Błąd pobierania miasta", "x", "text-red-500"); }
             }, () => window.showToast("Błąd GPS", "x", "text-red-500"));
         };
 
@@ -325,6 +361,7 @@
             } catch(e) { return null; }
         };
 
+        // THEME MANAGEMENT
         window.refreshTheme = async function() {
             let target = config.theme;
             if (config.theme === 'auto') {
@@ -355,6 +392,82 @@
             window.applySettings();
         };
 
+        // AI & VOICE HANDLING
+        window.handleVoiceResult = async function(text) {
+            if (!text || text.trim().length < 2) return;
+            let aiData = null;
+            if (config.aiEnabled) {
+                window.setUIProcessing(true);
+                try {
+                    const modelName = "gemma-3-27b";
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.geminiKey || apiKey}`, {
+                        method: 'POST', body: JSON.stringify({
+                            contents: [{ parts: [{ text: text }] }],
+                            systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera DPD. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON. Jeśli mowa o odbiorze lub paczce do zabrania, ustaw type na pickup." }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        aiData = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
+                    }
+                } catch (e) { aiData = null; }
+                window.setUIProcessing(false);
+            }
+
+            if (aiData && aiData.address) {
+                window.addEntry(aiData.address, aiData.note, aiData.type);
+            } else {
+                const low = text.toLowerCase();
+                const kw = (config.stopWord || "notatka").toLowerCase();
+                const split = low.indexOf(kw);
+                let addr = text, note = "", type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
+                if (split !== -1) { addr = text.substring(0, split).trim(); note = text.substring(split + kw.length).trim(); }
+                const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
+                let finalAddr = addr.toLowerCase();
+                Object.keys(numMap).forEach(w => finalAddr = finalAddr.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
+                finalAddr = finalAddr.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
+                window.addEntry(finalAddr, note, type);
+            }
+        };
+
+        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
+        if (Recog) {
+            const recog = new Recog();
+            recog.lang = 'pl-PL'; recog.interimResults = true;
+            recog.onstart = () => {
+                isRecording = true; lastTranscript = ""; interimTranscript = "";
+                document.getElementById('micBtn')?.classList.add('pulse-red');
+                document.getElementById('livePreview')?.classList.remove('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '1';
+                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(w => {
+                    wakeLock = w;
+                    document.getElementById('wakeDot').className = "w-1.5 h-1.5 bg-green-500 rounded-full";
+                }).catch(() => {});
+            };
+            recog.onresult = (e) => {
+                let inter = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
+                    else inter += e.results[i][0].transcript;
+                }
+                interimTranscript = inter;
+                document.getElementById('liveText').textContent = inter || lastTranscript || "Słucham...";
+            };
+            recog.onend = () => {
+                isRecording = false;
+                document.getElementById('micBtn')?.classList.remove('pulse-red');
+                document.getElementById('livePreview')?.classList.add('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '0';
+                const finalSpeech = lastTranscript || interimTranscript;
+                if (finalSpeech) window.handleVoiceResult(finalSpeech);
+            };
+            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
+        }
+
+        // DATA ADD & RENDER
         window.addEntry = function(addr, note = "", type = 'delivery') {
             if (!addr || addr.trim().length < 2) return;
             const entry = {
@@ -416,79 +529,7 @@
             window.setAIStatusUI();
         };
 
-        window.handleVoiceResult = async function(text) {
-            if (!text || text.trim().length < 2) return;
-            let aiData = null;
-            if (config.aiEnabled) {
-                window.setUIProcessing(true);
-                try {
-                    const modelName = "gemma-3-27b";
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.geminiKey || apiKey}`, {
-                        method: 'POST', body: JSON.stringify({
-                            contents: [{ parts: [{ text: text }] }],
-                            systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON." }] },
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        aiData = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
-                    }
-                } catch (e) { aiData = null; }
-                window.setUIProcessing(false);
-            }
-            if (aiData && aiData.address) {
-                window.addEntry(aiData.address, aiData.note, aiData.type);
-            } else {
-                const low = text.toLowerCase();
-                const kw = (config.stopWord || "notatka").toLowerCase();
-                const split = low.indexOf(kw);
-                let addr = text, note = "", type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
-                if (split !== -1) { addr = text.substring(0, split).trim(); note = text.substring(split + kw.length).trim(); }
-                const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
-                let finalAddr = addr.toLowerCase();
-                Object.keys(numMap).forEach(w => finalAddr = finalAddr.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
-                finalAddr = finalAddr.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
-                window.addEntry(finalAddr, note, type);
-            }
-        };
-
-        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
-        if (Recog) {
-            const recog = new Recog();
-            recog.lang = 'pl-PL'; recog.interimResults = true;
-            recog.onstart = () => {
-                isRecording = true; lastTranscript = ""; interimTranscript = "";
-                document.getElementById('micBtn')?.classList.add('pulse-red');
-                document.getElementById('livePreview')?.classList.remove('hidden');
-                const label = document.getElementById('micLabel');
-                if (label) label.style.opacity = '1';
-                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(w => {
-                    wakeLock = w;
-                    document.getElementById('wakeDot').className = "w-1.5 h-1.5 bg-green-500 rounded-full";
-                }).catch(() => {});
-            };
-            recog.onresult = (e) => {
-                let inter = '';
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
-                    else inter += e.results[i][0].transcript;
-                }
-                interimTranscript = inter;
-                document.getElementById('liveText').textContent = inter || lastTranscript || "Słucham...";
-            };
-            recog.onend = () => {
-                isRecording = false;
-                document.getElementById('micBtn')?.classList.remove('pulse-red');
-                document.getElementById('livePreview')?.classList.add('hidden');
-                const label = document.getElementById('micLabel');
-                if (label) label.style.opacity = '0';
-                const finalSpeech = lastTranscript || interimTranscript;
-                if (finalSpeech) window.handleVoiceResult(finalSpeech);
-            };
-            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
-        }
-
+        // VIEW & NAVIGATION
         window.toggleView = function(v) {
             ['listView', 'mapView', 'settingsView'].forEach(id => document.getElementById(id).classList.add('view-hidden'));
             document.getElementById(v + 'View').classList.remove('view-hidden');
@@ -510,6 +551,7 @@
         };
 
         window.handleMapToggle = () => currentView === 'map' ? window.toggleView('list') : window.toggleView('map');
+        
         window.renderMarkers = () => {
             if (!markersGroup) return; markersGroup.clearLayers();
             const today = getTodayStr();
@@ -525,38 +567,57 @@
         };
 
         window.switchSettingsTab = (tab) => {
-            const isConfig = tab === 'config';
-            document.getElementById('tabBtnConfig').className = isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            document.getElementById('tabBtnHistory').className = !isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            document.getElementById('tabContentConfig').classList.toggle('active', isConfig);
-            document.getElementById('tabContentHistory').classList.toggle('active', !isConfig);
-            if (!isConfig) {
-                const list = document.getElementById('historyList');
-                const grouped = addresses.reduce((acc, curr) => {
-                    if (!acc[curr.date]) acc[curr.date] = { date: curr.date, stops: [] };
-                    acc[curr.date].stops.push(curr); return acc;
-                }, {});
-                const sorted = Object.keys(grouped).sort((a,b) => {
-                    const partsA = a.split('.'), partsB = b.split('.');
-                    return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
-                });
-                list.innerHTML = sorted.map(k => {
-                    const d = grouped[k];
-                    const tips = d.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
-                    return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
-                        <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
-                            <div class="text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none">${d.date}</p><p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p></div>
-                            <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-                        </div>
-                        <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
-                            ${d.stops.map(s => `<div class="flex justify-between text-[10px]"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
-                        </div>
-                    </div>`;
-                }).join('');
-                lucide.createIcons();
+            const btnConfig = document.getElementById('tabBtnConfig');
+            const btnHistory = document.getElementById('tabBtnHistory');
+            const btnDoc = document.getElementById('tabBtnDoc');
+            const contentConfig = document.getElementById('tabContentConfig');
+            const contentHistory = document.getElementById('tabContentHistory');
+            const contentDoc = document.getElementById('tabContentDoc');
+
+            [btnConfig, btnHistory, btnDoc].forEach(b => b.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400');
+            [contentConfig, contentHistory, contentDoc].forEach(c => c.classList.remove('active'));
+
+            if (tab === 'config') {
+                btnConfig.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red';
+                contentConfig.classList.add('active');
+            } else if (tab === 'history') {
+                btnHistory.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red';
+                contentHistory.classList.add('active');
+                window.renderHistory();
+            } else {
+                btnDoc.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red';
+                contentDoc.classList.add('active');
             }
+            lucide.createIcons();
         };
 
+        window.renderHistory = () => {
+            const list = document.getElementById('historyList');
+            const grouped = addresses.reduce((acc, curr) => {
+                if (!acc[curr.date]) acc[curr.date] = { date: curr.date, stops: [] };
+                acc[curr.date].stops.push(curr); return acc;
+            }, {});
+            const sorted = Object.keys(grouped).sort((a,b) => {
+                const partsA = a.split('.'), partsB = b.split('.');
+                return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
+            });
+            list.innerHTML = sorted.map(k => {
+                const d = grouped[k];
+                const tips = d.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
+                return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
+                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left">
+                        <div class="text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none">${d.date}</p><p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p></div>
+                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
+                        ${d.stops.map(s => `<div class="flex justify-between text-[10px]"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        // SETTINGS & ACTIONS
         window.applySettings = () => {
             config.aiEnabled = document.getElementById('setAiEnabled').checked;
             config.geminiKey = document.getElementById('setGeminiKey').value;
@@ -583,6 +644,7 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(b); link.download = `Raport_${today.replace(/\./g, '_')}.csv`; link.click();
         };
 
+        // INITIALIZATION
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('setAiEnabled').checked = config.aiEnabled !== false;
             document.getElementById('setGeminiKey').value = config.geminiKey || "";
