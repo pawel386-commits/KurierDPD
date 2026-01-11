@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Kurier Log - DPD AI Edition</title>
     
+    <!-- iPhone Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta id="theme-color-meta" name="theme-color" content="#dc0032">
@@ -37,6 +38,7 @@
         .header-safe-area { padding-top: env(safe-area-inset-top); background-color: var(--dpd-red); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
+        /* Pulse Animations */
         .pulse-red { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0.7); }
@@ -73,6 +75,10 @@
         }
         .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
         .leaflet-popup-content { margin: 0; width: 220px !important; }
+
+        /* iPhone Optimization */
+        input, select, textarea { font-size: 16px !important; }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
@@ -80,211 +86,211 @@
     <!-- Nagłówek -->
     <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none text-left">
         <div class="header-safe-area"></div>
-        <div class="p-4 pt-2 pb-4 text-left">
-            <div class="flex justify-between items-center text-left">
-                <div class="flex items-center gap-3 text-left">
-                    <div class="bg-white px-2 py-1.5 rounded-lg inline-block shadow-sm text-left">
-                        <img src="https://www.dpd.com/wp-content/themes/DPD_NoLogin/images/DPD_logo_redgrad_rgb_responsive.svg" alt="DPD Logo" class="h-5 w-auto text-left">
+        <div class="p-4 pt-2 pb-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white px-2 py-1.5 rounded-lg inline-block shadow-sm">
+                        <img src="https://www.dpd.com/wp-content/themes/DPD_NoLogin/images/DPD_logo_redgrad_rgb_responsive.svg" alt="DPD Logo" class="h-5 w-auto">
                     </div>
-                    <div class="text-left">
-                        <p id="headerName" class="text-[10px] font-black uppercase tracking-wider leading-tight text-left">Kurier Log AI</p>
-                        <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em] text-left">DPD Logistics</p>
+                    <div>
+                        <p id="headerName" class="text-[10px] font-black uppercase tracking-wider leading-tight">Kurier Log AI</p>
+                        <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em]">DPD Logistics</p>
                     </div>
                 </div>
-                <div id="headerActions" class="text-right flex flex-col items-end gap-2 text-left">
-                    <div class="flex items-center gap-2 text-left">
-                        <div id="wakeStatus" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 text-left">
-                            <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors text-left"></div> <span id="wakeText" class="text-left">Blokada: Wył</span>
+                <div class="flex flex-col items-end gap-2">
+                    <div class="flex items-center gap-1.5">
+                        <!-- Wskaźnik AI Status -->
+                        <div id="aiStatusTag" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10">
+                            <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> <span id="aiStatusText">AI: OK</span>
                         </div>
-                        <div id="currentDate" class="text-[10px] font-bold opacity-90 tracking-wider whitespace-nowrap text-left">--.--.----</div>
+                        <!-- Wskaźnik Blokady -->
+                        <div id="wakeStatus" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10">
+                            <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
+                        </div>
+                        <div id="currentDate" class="text-[10px] font-bold opacity-90 tracking-wider whitespace-nowrap">--.--.----</div>
                     </div>
-                    <div class="flex gap-2 items-center text-left">
-                        <button onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all text-left">
-                            <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5 text-left"></i> <span id="toggleText" class="text-left">Mapa</span>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all">
+                            <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5"></i> <span id="toggleText">Mapa</span>
                         </button>
-                        <button onclick="cycleThemeManual()" class="bg-black/20 w-9 h-9 flex flex-col items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0 text-left">
-                            <i id="themeQuickIcon" data-lucide="sun" class="w-4 h-4 text-white text-left"></i>
-                            <span id="themeAutoLabel" class="text-[6px] font-black uppercase mt-0.5 hidden leading-none text-left">Auto</span>
+                        <button onclick="cycleThemeManual()" class="bg-black/20 w-9 h-9 flex flex-col items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0">
+                            <i id="themeQuickIcon" data-lucide="sun" class="w-4 h-4 text-white"></i>
+                            <span id="themeAutoLabel" class="text-[6px] font-black uppercase mt-0.5 hidden leading-none">Auto</span>
                         </button>
-                        <button onclick="toggleView('settings')" class="bg-black/20 w-9 h-9 flex items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0 text-left">
-                            <i data-lucide="settings" class="w-4 h-4 text-white text-left"></i>
+                        <button onclick="toggleView('settings')" class="bg-black/20 w-10 h-10 flex items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0">
+                            <i data-lucide="settings" class="w-5 h-5 text-white"></i>
                         </button>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-4 bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10 text-left">
-                <div class="flex flex-col text-left">
-                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter text-white text-left">Doręczenia</span>
-                    <span id="deliveryCounter" class="text-2xl font-black leading-none text-white text-left">0</span>
+            <!-- Nowy układ liczników (oddzielne okienka) -->
+            <div class="mt-4 grid grid-cols-3 gap-2">
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
+                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Doręczenia</span>
+                    <span id="deliveryCounter" class="text-xl font-black leading-none text-white">0</span>
                 </div>
-                <div class="flex flex-col items-center text-left">
-                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter text-white text-center text-left">Odbiory</span>
-                    <span id="pickupCounter" class="text-2xl font-black leading-none text-zinc-300 text-center text-left">0</span>
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
+                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Odbiory</span>
+                    <span id="pickupCounter" class="text-xl font-black leading-none text-zinc-300">0</span>
                 </div>
-                <div class="flex flex-col items-end text-right text-left">
-                    <span class="text-[9px] font-bold uppercase opacity-80 tracking-tighter text-white text-right text-left">Napiwki</span>
-                    <span id="tipTotal" class="text-2xl font-black leading-none text-green-300 text-right text-left">0.00 zł</span>
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
+                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Napiwki</span>
+                    <span id="tipTotal" class="text-xl font-black leading-none text-green-300">0.00 zł</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <video id="noSleepVideo" playsinline muted loop style="position:fixed; top:-100px; left:-100px; width:1px; height:1px;">
-        <source src="https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp4" type="video/mp4">
-    </video>
-
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
-        <!-- Widok Listy -->
-        <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1 text-left">
-            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm text-left">
-                <span class="relative flex h-2 w-2 text-left">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75 text-left"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500 text-left"></span>
+        <!-- Lista Stopów -->
+        <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
+            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                 </span>
-                <span id="liveText" class="break-words text-left text-zinc-900 dark:text-yellow-200 text-left">Słucham...</span>
+                <span id="liveText" class="break-words">Słucham...</span>
             </div>
-            <div id="emptyState" class="text-center py-20 text-gray-400 hidden text-left">
-                <i data-lucide="mic" class="w-16 h-16 mx-auto mb-4 opacity-10 text-left"></i>
-                <p class="font-medium text-sm text-left">Podyktuj adres (np. "Polna 5").</p>
+            <div id="emptyState" class="text-center py-20 text-gray-400 hidden">
+                <i data-lucide="mic" class="w-16 h-16 mx-auto mb-4 opacity-10"></i>
+                <p class="font-medium text-sm">Podyktuj adres (np. "Polna 5").</p>
             </div>
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
 
-        <!-- Widok Mapy -->
-        <div id="mapView" class="absolute inset-0 z-0 view-hidden text-left">
-            <div id="map" class="text-left"></div>
+        <!-- Mapa -->
+        <div id="mapView" class="absolute inset-0 z-0 view-hidden">
+            <div id="map"></div>
         </div>
 
-        <!-- Widok Ustawień -->
+        <!-- Ustawienia -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
-            <div class="header-safe-area flex-none text-left"></div>
-            <div class="p-4 flex-none text-left">
-                <div class="flex justify-between items-center mb-6 text-left">
-                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Ustawienia</h2>
-                    <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all text-left"><i data-lucide="x" class="w-6 h-6 text-left"></i></button>
+            <div class="header-safe-area flex-none"></div>
+            <div class="p-4 flex-none">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
+                    <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
-                <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4 text-left">
-                    <button onclick="switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red text-left">Konfiguracja</button>
-                    <button onclick="switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400 text-left">Historia dni</button>
+                <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4">
+                    <button onclick="switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
+                    <button onclick="switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400">Historia dni</button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left text-left">
-                <div id="tabContentConfig" class="tab-content active space-y-6 text-left text-left">
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Klucz API Gemini</label>
-                        <input type="password" id="setGeminiKey" oninput="applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+            <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40">
+                <div id="tabContentConfig" class="tab-content active space-y-6">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Klucz API Google (Gemma-3-27B)</label>
+                        <input type="password" id="setGeminiKey" oninput="applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left text-zinc-600 dark:text-zinc-400 text-left">Motyw Aplikacji</label>
-                        <select id="setTheme" onchange="applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer text-left">
-                            <option value="light" class="text-left">Jasny</option>
-                            <option value="dark" class="text-left">Ciemny</option>
-                            <option value="auto" class="text-left">Auto (Wschód/Zachód)</option>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400">Motyw Aplikacji</label>
+                        <select id="setTheme" onchange="applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer">
+                            <option value="light">Jasny</option>
+                            <option value="dark">Ciemny</option>
+                            <option value="auto">Auto (Wschód/Zachód)</option>
                         </select>
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Miasto Główne</label>
-                        <input type="text" id="setCity" oninput="applySettings()" placeholder="Np. Wrocław" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Miasto Główne</label>
+                        <input type="text" id="setCity" oninput="applySettings()" placeholder="Np. Wrocław" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Imię Kuriera</label>
-                        <input type="text" id="setCourierName" oninput="applySettings()" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Imię Kuriera</label>
+                        <input type="text" id="setCourierName" oninput="applySettings()" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Hasło notatki (fallback)</label>
-                        <input type="text" id="setStopWord" oninput="applySettings()" placeholder="notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Hasło notatki (fallback)</label>
+                        <input type="text" id="setStopWord" oninput="applySettings()" placeholder="notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left text-left">
-                        <span class="text-sm font-bold text-left">Używaj GPS</span>
-                        <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red text-left">
+                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <span class="text-sm font-bold">Używaj GPS</span>
+                        <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red">
                     </label>
-                    <button onclick="confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30 text-left text-left">Wyczyść całą bazę danych</button>
+                    <button onclick="confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
                 </div>
-                <div id="tabContentHistory" class="tab-content space-y-4 text-left">
-                    <div id="historyList" class="space-y-4 text-left text-left text-left"></div>
+                <div id="tabContentHistory" class="tab-content space-y-4">
+                    <div id="historyList" class="space-y-4"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modale -->
-    <div id="confirmModal" class="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
-            <i data-lucide="alert-triangle" class="w-10 h-10 text-dpd-red mx-auto mb-4 text-center text-left text-left"></i>
-            <h3 class="text-lg font-black uppercase mb-2 text-center text-left text-left">Jesteś pewien?</h3>
-            <p id="confirmMessage" class="text-xs text-gray-500 text-center mb-6 text-center text-left text-left"></p>
-            <div class="flex gap-3 text-left">
-                <button onclick="closeConfirm()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left">Nie</button>
-                <button id="confirmActionBtn" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left">Tak, usuń</button>
+    <!-- Panele boczne i Modale -->
+    <div id="confirmModal" class="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <i data-lucide="alert-triangle" class="w-10 h-10 text-dpd-red mx-auto mb-4 text-center"></i>
+            <h3 class="text-lg font-black uppercase mb-2 text-center">Jesteś pewien?</h3>
+            <p id="confirmMessage" class="text-xs text-gray-500 text-center mb-6"></p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Nie</button>
+                <button id="confirmActionBtn" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Tak, usuń</button>
             </div>
         </div>
     </div>
 
-    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left text-left text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left text-left">
-            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left text-left">Napiwek</h3>
-            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate text-left text-left text-left text-left text-left"></p>
-            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none text-left">
+    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
+            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
+            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
             <div class="flex gap-3 text-left">
-                <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left">Anuluj</button>
-                <button onclick="confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left text-left">Zapisz</button>
+                <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
+                <button onclick="confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
             </div>
         </div>
     </div>
 
-    <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left text-left text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-sm:max-w-xs w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left text-left">
-            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red text-left text-left">Edytuj Stop</h3>
-            <div class="space-y-4 text-left">
-                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700 text-left text-left">
-                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase text-left text-left">Adres</label>
-                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left text-left">
+    <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-sm:max-w-xs w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
+            <div class="space-y-4">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
+                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                 </div>
-                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700 text-left text-left">
-                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase text-left text-left text-left">Notatka</label>
-                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug text-left text-left"></textarea>
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
+                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
+                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug"></textarea>
                 </div>
             </div>
-            <div class="flex gap-3 mt-6 text-left">
-                <button onclick="closeEditModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left">Anuluj</button>
-                <button onclick="confirmEdit()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center text-left text-left text-left">Zapisz</button>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
+                <button onclick="confirmEdit()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
             </div>
         </div>
     </div>
 
     <!-- Panel Dolny -->
-    <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30 text-left">
-        <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent text-left text-left"></div>
-        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6 text-left text-left">
-            <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative text-left">
-                <button onclick="confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red text-left">
-                    <i data-lucide="trash-2" class="w-6 h-6 text-left text-left text-left text-left"></i>
-                    <span class="text-[10px] font-bold uppercase text-left text-left text-left">Reset</span>
+    <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
+        <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
+        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6 text-left">
+            <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
+                <button onclick="confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
+                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">Reset</span>
                 </button>
-                <div class="relative -top-10 text-center text-left">
-                    <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900 text-left text-left">
-                        <i data-lucide="mic" id="micIcon" class="w-10 h-10 text-center text-left text-left"></i>
+                <div class="relative -top-10 text-center">
+                    <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900">
+                        <i data-lucide="mic" id="micIcon" class="w-10 h-10 text-center"></i>
                     </button>
-                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black text-center text-left">Słucham...</div>
+                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black text-center">Słucham...</div>
                 </div>
-                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark text-left">
-                    <i data-lucide="file-spreadsheet" class="w-6 h-6 text-left text-left text-left text-left"></i>
-                    <span class="text-[10px] font-bold uppercase text-left text-left text-left">Raport</span>
+                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark">
+                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">Raport</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2 text-left text-left">
-        <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-left text-left text-left"></i><span id="toastText" class="text-left text-left text-left text-left"></span>
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // API Configuration - Always set apiKey to empty string for runtime injection
-        const apiKey = "";
-        
+        const apiKeyPlaceholder = "";
         let addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: ""
@@ -298,6 +304,18 @@
         lucide.createIcons();
 
         // --- UTILS ---
+        function setAIStatus(status) {
+            const dot = document.getElementById('aiDot');
+            const text = document.getElementById('aiStatusText');
+            if (status === 'ok') {
+                dot.className = "w-1.5 h-1.5 bg-green-500 rounded-full transition-colors";
+                text.textContent = "AI: OK";
+            } else {
+                dot.className = "w-1.5 h-1.5 bg-yellow-500 rounded-full transition-colors";
+                text.textContent = "AI: Błąd";
+            }
+        }
+
         function showConfirm(msg, onConfirm) {
             const modal = document.getElementById('confirmModal');
             document.getElementById('confirmMessage').textContent = msg;
@@ -347,13 +365,13 @@
             applySettings();
         }
 
-        // --- GEMINI AI LOGIC (Model: gemini-2.5-flash-preview-09-2025) ---
+        // --- GEMMA-3 AI LOGIC (iPhone Ready) ---
         async function parseWithAI(text) {
-            const finalKey = config.geminiKey || apiKey;
+            const finalKey = config.geminiKey || apiKeyPlaceholder;
+            if (!finalKey) { setAIStatus('error'); return null; }
             setUIProcessing(true);
             
-            // Reverting to the supported model for this environment
-            const modelName = "gemini-2.5-flash-preview-09-2025";
+            const modelName = "gemma-3-27b";
             const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
             
             const payload = {
@@ -375,7 +393,7 @@
                 }
             };
 
-            const backoff = [1000, 2000, 4000, 8000, 16000];
+            const backoff = [1000, 2000, 4000, 8000];
             for (let i = 0; i <= backoff.length; i++) {
                 try {
                     const res = await fetch(modelUrl, {
@@ -387,6 +405,7 @@
                     if (res.ok) {
                         const data = await res.json();
                         setUIProcessing(false);
+                        setAIStatus('ok');
                         const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                         return resultText ? JSON.parse(resultText) : null;
                     }
@@ -399,6 +418,7 @@
                 } catch (e) {
                     if (i === backoff.length) {
                         setUIProcessing(false);
+                        setAIStatus('error');
                         return null; 
                     }
                 }
@@ -411,7 +431,7 @@
             isProcessingAI = proc;
             const b = document.getElementById('micBtn');
             const l = document.getElementById('micLabel');
-            if (proc) { b?.classList.add('pulse-ai'); if (l) { l.textContent = "Analiza AI..."; l.style.opacity = '1'; } }
+            if (proc) { b?.classList.add('pulse-ai'); if (l) { l.textContent = "Analiza Gemma-3..."; l.style.opacity = '1'; } }
             else { b?.classList.remove('pulse-ai'); if (l) l.style.opacity = '0'; }
         }
 
@@ -423,7 +443,7 @@
             if (aiData && aiData.address) {
                 addEntry(aiData.address, aiData.note || "", aiData.type || 'delivery');
             } else {
-                // Manual Fallback
+                // Manual Fallback Logic
                 let low = text.toLowerCase();
                 const kw = (config.stopWord || "notatka").toLowerCase();
                 const split = low.indexOf(kw);
@@ -475,7 +495,7 @@
             showToast("Dodano stop", "check", "text-green-500");
         }
 
-        // --- SPEECH ---
+        // --- SPEECH RECOGNITION ---
         const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
         if (Recog) {
             const recog = new Recog();
@@ -506,7 +526,7 @@
             window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
         }
 
-        // --- RENDER & VIEW ---
+        // --- RENDER & NAVIGATION ---
         function saveAndRender() {
             localStorage.setItem('dpd_logs_v13', JSON.stringify(addresses));
             const today = new Date().toLocaleDateString('pl-PL');
@@ -523,19 +543,19 @@
                 document.getElementById('emptyState')?.classList.add('hidden');
                 listEl.innerHTML = todayLogs.map(item => `
                     <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 text-left">
-                        <div class="flex justify-between items-start text-left">
-                            <div class="flex-1 text-left">
-                                <span class="text-[8px] font-black uppercase opacity-60 text-left">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
-                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight text-left">${item.address}</p>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <span class="text-[8px] font-black uppercase opacity-60">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
+                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight">${item.address}</p>
                             </div>
-                            <div class="flex gap-1 shrink-0 text-left">
-                                <button onclick="toggleType(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 text-left"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left"></i></button>
-                                <button onclick="openEditModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 text-left"><i data-lucide="pencil" class="w-4 h-4 text-left text-left"></i></button>
-                                <button onclick="openTipModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 ${item.tip > 0 ? 'text-green-500' : ''} text-left"><i data-lucide="banknote" class="w-4 h-4 text-left text-left"></i></button>
-                                <button onclick="deleteAddress(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 hover:text-dpd-red text-left"><i data-lucide="trash-2" class="w-4 h-4 text-left text-left"></i></button>
+                            <div class="flex gap-1 shrink-0">
+                                <button onclick="toggleType(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
+                                <button onclick="openEditModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="openTipModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 ${item.tip > 0 ? 'text-green-500' : ''}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
+                                <button onclick="deleteAddress(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 hover:text-dpd-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        ${item.note ? `<div class="mt-2 text-[11px] text-gray-500 italic border-t border-gray-50 dark:border-zinc-700 pt-1 text-left">${item.note}</div>` : ''}
+                        ${item.note ? `<div class="mt-2 text-[11px] text-gray-500 italic border-t border-gray-50 dark:border-zinc-700 pt-1">${item.note}</div>` : ''}
                     </li>`).join('');
             }
             lucide.createIcons();
@@ -568,18 +588,18 @@
                 const day = grouped[k];
                 const tips = day.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
                 return `
-                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4 text-left">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4 text-left text-left">
                     <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left">
                         <div class="text-left">
                             <p class="text-[11px] font-black uppercase text-dpd-red leading-none text-left">${day.date}</p>
                             <p class="text-[8px] font-bold opacity-40 uppercase mt-1 text-left">Napiwki: ${tips} zł</p>
                         </div>
                         <div class="flex gap-1 text-left">
-                            <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 text-left"><i data-lucide="download" class="w-4 h-4 text-left"></i></button>
-                            <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 text-left"><i data-lucide="download" class="w-4 h-4 text-left text-left"></i></button>
+                            <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left text-left"></i></button>
                         </div>
                     </div>
-                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
+                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left text-left">
                         ${day.stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80 text-left">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'} text-left text-left">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
                     </div>
                 </div>`;
@@ -621,6 +641,7 @@
         }
         function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
 
+        // --- LEAFLET MAP & CLUSTERING ---
         function initMap() { 
             if (!map) { 
                 map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13); 
@@ -646,14 +667,14 @@
                     html: `<div class="relative"><i data-lucide="map-pin" class="w-8 h-8 text-dpd-red drop-shadow-md text-left text-left"></i>${count > 1 ? `<div class="absolute -top-1 -right-1 marker-cluster-custom w-5 h-5 text-center text-left text-left">${count}</div>` : ''}</div>`,
                     className: 'custom-div-icon', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
                 });
-                const popup = `<div class="p-3 text-left"><p class="text-[10px] font-black uppercase text-dpd-red mb-2 border-b pb-1 text-left text-left">Punkty (${count})</p><ul class="space-y-2 max-h-48 overflow-y-auto text-left text-left">${items.map(it => `<li class="text-[11px] text-left text-left"><b>${it.time}</b> ${it.address}</li>`).join('')}</ul></div>`;
+                const popup = `<div class="p-3 text-left"><p class="text-[10px] font-black uppercase text-dpd-red mb-2 border-b pb-1 text-left">Punkty (${count})</p><ul class="space-y-2 max-h-48 overflow-y-auto text-left text-left">${items.map(it => `<li class="text-[11px] text-left text-left"><b>${it.time}</b> ${it.address}</li>`).join('')}</ul></div>`;
                 L.marker([lat, lng], { icon }).bindPopup(popup).addTo(markersGroup);
                 bounds.extend([lat, lng]);
             });
             map.fitBounds(bounds, { padding: [50, 50] }); lucide.createIcons();
         }
 
-        // --- MODALE ---
+        // --- ACTIONS & MODALS ---
         function deleteAddress(id) { showConfirm("Usunąć ten stop?", () => { addresses = addresses.filter(a => a.id != id); saveAndRender(); }); }
         function confirmReset() { showConfirm("Wyczyścić dzisiejsze stopy?", () => { const today = new Date().toLocaleDateString('pl-PL'); addresses = addresses.filter(a => a.date !== today); saveAndRender(); }); }
         function confirmAllClear() { showConfirm("Usunąć całą historię?", () => { addresses = []; saveAndRender(); }); }
@@ -674,9 +695,10 @@
             lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000);
         }
         function prefetchGps() { if (navigator.geolocation && config.gpsEnabled) navigator.geolocation.getCurrentPosition(p => cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude }, null, { enableHighAccuracy: true }); }
-        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); const d = document.getElementById('wakeDot'); if (d) d.className = "w-1.5 h-1.5 bg-green-500 rounded-full text-left text-left"; document.getElementById('wakeText').textContent = "Blokada: WŁ"; } } catch(e){} }
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); const d = document.getElementById('wakeDot'); if (d) d.className = "w-1.5 h-1.5 bg-green-500 rounded-full"; document.getElementById('wakeText').textContent = "Blokada: WŁ"; } } catch(e){} }
         function exportToCSV() { const today = new Date().toLocaleDateString('pl-PL'); exportSpecificDay(today); }
 
+        // --- INIT ---
         document.getElementById('setCity').value = config.city || "";
         document.getElementById('setTheme').value = config.theme || "auto";
         document.getElementById('setCourierName').value = config.name || "";
