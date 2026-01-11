@@ -61,44 +61,43 @@
         .tab-content.active { display: block; }
 
         .glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input, select, textarea { font-size: 16px !important; } /* Zapobieganie Auto-zoom na iOS */
+        input, select, textarea { font-size: 16px !important; }
     </style>
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
-    <!-- Nagłówek -->
     <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none">
         <div class="header-safe-area"></div>
         <div class="p-4 pt-2 pb-4 text-left">
             <div class="flex justify-between items-center text-left">
-                <div class="flex items-center gap-3 text-left">
+                <div class="flex items-center gap-3">
                     <div class="bg-white px-2 py-1.5 rounded-lg inline-block shadow-sm">
                         <img src="https://www.dpd.com/wp-content/themes/DPD_NoLogin/images/DPD_logo_redgrad_rgb_responsive.svg" alt="DPD Logo" class="h-5 w-auto">
                     </div>
                     <div>
-                        <p id="headerName" class="text-[10px] font-black uppercase tracking-wider leading-tight text-left">Kurier Log AI</p>
-                        <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em] text-left">DPD Logistics</p>
+                        <p id="headerName" class="text-[10px] font-black uppercase tracking-wider leading-tight">Kurier Log AI</p>
+                        <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em]">DPD Logistics</p>
                     </div>
                 </div>
                 <div class="flex flex-col items-end gap-2 text-right">
-                    <div class="flex items-center gap-1.5 justify-end text-left">
-                        <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0 text-left">
+                    <div class="flex items-center gap-1.5 justify-end">
+                        <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
                             <span id="aiStatusLabel">AI: OK</span>
                         </div>
-                        <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0 text-left">
+                        <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
                         </div>
                     </div>
-                    <div class="flex gap-2 items-center justify-end text-left">
-                        <button id="toggleBtn" onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all text-left text-left">
+                    <div class="flex gap-2 items-center justify-end">
+                        <button id="toggleBtn" onclick="window.handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all">
                             <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5"></i> <span id="toggleText">Mapa</span>
                         </button>
-                        <button onclick="cycleThemeManual()" class="bg-black/20 w-9 h-9 flex flex-col items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0 text-left">
+                        <button onclick="window.cycleThemeManual()" class="bg-black/20 w-9 h-9 flex flex-col items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0">
                             <i id="themeQuickIcon" data-lucide="sun" class="w-4 h-4 text-white"></i>
-                            <span id="themeAutoLabel" class="text-[6px] font-black uppercase mt-0.5 hidden leading-none text-left">Auto</span>
+                            <span id="themeAutoLabel" class="text-[6px] font-black uppercase mt-0.5 hidden leading-none">Auto</span>
                         </button>
-                        <button onclick="toggleView('settings')" class="bg-black/20 w-10 h-10 flex items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0 text-left">
+                        <button onclick="window.toggleView('settings')" class="bg-black/20 w-10 h-10 flex items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0">
                             <i data-lucide="settings" class="w-5 h-5 text-white"></i>
                         </button>
                     </div>
@@ -107,33 +106,33 @@
             
             <div class="mt-4 grid grid-cols-3 gap-2">
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5 text-left">Doręczenia</span>
-                    <span id="deliveryCounter" class="text-xl font-black leading-none text-left">0</span>
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Doręczenia</span>
+                    <span id="deliveryCounter" class="text-xl font-black leading-none">0</span>
                 </div>
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5 text-left">Odbiory</span>
-                    <span id="pickupCounter" class="text-xl font-black leading-none text-zinc-300 text-left">0</span>
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Odbiory</span>
+                    <span id="pickupCounter" class="text-xl font-black leading-none text-zinc-300">0</span>
                 </div>
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5 text-left">Napiwki</span>
-                    <span id="tipTotal" class="text-xl font-black leading-none text-green-300 text-left">0.00 zł</span>
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Napiwki</span>
+                    <span id="tipTotal" class="text-xl font-black leading-none text-green-300">0.00 zł</span>
                 </div>
             </div>
         </div>
     </header>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
-        <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1 text-left">
-            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm text-left">
+        <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
+            <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                 </span>
-                <span id="liveText" class="break-words text-left">Słucham...</span>
+                <span id="liveText" class="break-words">Słucham...</span>
             </div>
-            <div id="emptyState" class="text-center py-20 text-gray-400 hidden text-left">
+            <div id="emptyState" class="text-center py-20 text-gray-400 hidden">
                 <i data-lucide="mic" class="w-16 h-16 mx-auto mb-4 opacity-10"></i>
-                <p class="font-medium text-sm text-left">Podyktuj adres (np. "Polna 5").</p>
+                <p class="font-medium text-sm">Podyktuj adres (np. "Polna 5").</p>
             </div>
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
@@ -144,123 +143,119 @@
 
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
             <div class="header-safe-area flex-none"></div>
-            <div class="p-4 flex-none text-left">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
-                    <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all text-left"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <div class="p-4 flex-none">
+                <div class="flex justify-between items-center mb-6 text-left">
+                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Ustawienia</h2>
+                    <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
                 <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4 text-left">
-                    <button onclick="switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
-                    <button onclick="switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400 text-left">Historia dni</button>
+                    <button onclick="window.switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
+                    <button onclick="window.switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400">Historia dni</button>
                 </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left">
-                <div id="tabContentConfig" class="tab-content active space-y-6 text-left">
-                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
+                <div id="tabContentConfig" class="tab-content active space-y-6">
+                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
                         <div class="flex flex-col text-left">
-                            <span class="text-sm font-bold text-left">Włącz AI (Gemma-3-27B)</span>
-                            <span class="text-[10px] opacity-60 text-left">Automatyczna analiza adresu i notatek</span>
+                            <span class="text-sm font-bold">Włącz AI (Gemma-3-27B)</span>
+                            <span class="text-[10px] opacity-60">Automatyczna analiza adresu i notatek</span>
                         </div>
-                        <input type="checkbox" id="setAiEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red text-left">
+                        <input type="checkbox" id="setAiEnabled" onchange="window.applySettings()" class="w-5 h-5 accent-dpd-red">
                     </label>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left text-left">Klucz API Gemma-3-27B</label>
-                        <input type="password" id="setGeminiKey" oninput="applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Klucz API Gemma-3-27B</label>
+                        <input type="password" id="setGeminiKey" oninput="window.applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400 text-left text-left">Motyw Aplikacji</label>
-                        <select id="setTheme" onchange="applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400 text-left">Motyw Aplikacji</label>
+                        <select id="setTheme" onchange="window.applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer">
                             <option value="light">Jasny</option>
                             <option value="dark">Ciemny</option>
                             <option value="auto">Auto (Wschód/Zachód)</option>
                         </select>
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left text-left">Miasto Główne</label>
-                        <div class="flex items-center gap-2 text-left">
-                            <input type="text" id="setCity" oninput="applySettings()" placeholder="Np. Wrocław" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
-                            <button onclick="updateCityFromGps()" class="p-2 bg-gray-200 dark:bg-zinc-700 rounded-full active:scale-90 text-left"><i data-lucide="map-pin" class="w-4 h-4 text-dpd-red"></i></button>
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Miasto Główne</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="setCity" oninput="window.applySettings()" placeholder="Np. Wrocław" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                            <button onclick="window.updateCityFromGps()" class="p-2 bg-gray-200 dark:bg-zinc-700 rounded-full active:scale-90"><i data-lucide="map-pin" class="w-4 h-4 text-dpd-red"></i></button>
                         </div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left text-left">Hasło notatki (fallback)</label>
-                        <input type="text" id="setStopWord" oninput="applySettings()" placeholder="notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 text-left">
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Hasło notatki (fallback)</label>
+                        <input type="text" id="setStopWord" oninput="window.applySettings()" placeholder="notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <span class="text-sm font-bold text-left">Używaj GPS</span>
-                        <input type="checkbox" id="setGpsEnabled" onchange="applySettings()" class="w-5 h-5 accent-dpd-red text-left">
+                    <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <span class="text-sm font-bold">Używaj GPS</span>
+                        <input type="checkbox" id="setGpsEnabled" onchange="window.applySettings()" class="w-5 h-5 accent-dpd-red">
                     </label>
-                    <button onclick="confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30 text-left">Wyczyść całą bazę danych</button>
+                    <button onclick="window.confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
                 </div>
-                <div id="tabContentHistory" class="tab-content space-y-4 text-left text-left">
-                    <div id="historyList" class="space-y-4 text-left text-left text-left"></div>
+                <div id="tabContentHistory" class="tab-content space-y-4">
+                    <div id="historyList" class="space-y-4"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Napiwek Modal -->
-    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
-            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left text-left">Napiwek</h3>
+            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left">Napiwek</h3>
             <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate text-left"></p>
-            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none text-left">
-            <div class="flex gap-3 text-left">
-                <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center text-left">Anuluj</button>
-                <button onclick="confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center text-left">Zapisz</button>
+            <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
+            <div class="flex gap-3">
+                <button onclick="window.closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
+                <button onclick="window.confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
             </div>
         </div>
     </div>
 
-    <!-- Panel Dolny -->
-    <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30 text-left">
-        <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent text-left"></div>
-        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6 text-left">
-            <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative text-left text-left">
-                <button onclick="confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red text-left">
-                    <i data-lucide="trash-2" class="w-6 h-6 text-left"></i>
-                    <span class="text-[10px] font-bold uppercase text-left">Reset</span>
+    <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
+        <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
+        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
+            <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
+                <button onclick="window.confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
+                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">Reset</span>
                 </button>
-                <div class="relative -top-10 text-center text-left">
-                    <button id="micBtn" onclick="toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900 text-left text-left">
+                <div class="relative -top-10 text-center">
+                    <button id="micBtn" onclick="window.toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900">
                         <i data-lucide="mic" id="micIcon" class="w-10 h-10 text-center"></i>
                     </button>
-                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black text-center text-left">Słucham...</div>
+                    <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black text-center">Słucham...</div>
                 </div>
-                <button onclick="exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark text-left">
-                    <i data-lucide="file-spreadsheet" class="w-6 h-6 text-left"></i>
-                    <span class="text-[10px] font-bold uppercase text-left text-left text-left text-left">Raport</span>
+                <button onclick="window.exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark">
+                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">Raport</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2 text-left">
-        <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-left text-left text-left"></i><span id="toastText"></span>
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // Konfiguracja API i Stanu
         const apiKey = ""; 
-        let addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]');
+        let addresses = [];
+        try { addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]'); } catch(e) { addresses = []; }
+        
         let config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true
         }));
 
-        let isRecording = false, isProcessingAI = false, lastTranscript = "";
+        let isRecording = false, isProcessingAI = false, lastTranscript = "", interimTranscript = "";
         let wakeLock = null, currentView = 'list', map = null, markersGroup = null, cachedGps = null;
         let activeTipId = null, sunTimes = null;
 
-        // --- GWARANTOWANY FORMAT DATY ---
         function getTodayStr() {
             const d = new Date();
             return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
         }
 
-        // --- UI UTILS ---
-        function setAIStatusUI() {
+        window.setAIStatusUI = function() {
             const dot = document.getElementById('aiDot');
             const label = document.getElementById('aiStatusLabel');
             if (dot && label) {
@@ -275,18 +270,18 @@
                     label.textContent = "AI: OK";
                 }
             }
-        }
+        };
 
-        function setUIProcessing(proc) {
+        window.setUIProcessing = function(proc) {
             isProcessingAI = proc;
             const b = document.getElementById('micBtn');
             const l = document.getElementById('micLabel');
             if (proc) { b?.classList.add('pulse-ai'); if (l) { l.textContent = "Analiza..."; l.style.opacity = '1'; } }
             else { b?.classList.remove('pulse-ai'); if (l) { l.textContent = "Słucham..."; l.style.opacity = '0'; } }
-            setAIStatusUI();
-        }
+            window.setAIStatusUI();
+        };
 
-        function showToast(m, i, c) {
+        window.showToast = function(m, i, c) {
             const t = document.getElementById('toast');
             const text = document.getElementById('toastText');
             const icon = document.getElementById('toastIcon');
@@ -297,45 +292,30 @@
             lucide.createIcons();
             t.style.opacity = '1';
             setTimeout(() => t.style.opacity = '0', 2500);
-        }
+        };
 
-        // --- GEOLOKACJA I MIASTO ---
-        async function fetchCityName(lat, lng) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
-                const data = await res.json();
-                return data.address.city || data.address.town || data.address.village || null;
-            } catch (e) { return null; }
-        }
-
-        function updateCityFromGps() {
+        window.updateCityFromGps = function() {
             if (!navigator.geolocation) return;
-            showToast("Pobieram miasto...", "map-pin", "text-blue-500");
+            window.showToast("Pobieram miasto...", "map-pin", "text-blue-500");
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const city = await fetchCityName(pos.coords.latitude, pos.coords.longitude);
-                if (city) {
-                    config.city = city;
-                    document.getElementById('setCity').value = city;
-                    localStorage.setItem('dpd_config_v12', JSON.stringify(config));
-                    showToast(`Ustawiono: ${city}`, "check", "text-green-500");
-                    sunTimes = null; refreshTheme();
-                } else {
-                    showToast("Nie udało się pobrać miasta", "x", "text-red-500");
-                }
-            });
-        }
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10`);
+                    const data = await res.json();
+                    const city = data.address.city || data.address.town || data.address.village;
+                    if (city) {
+                        config.city = city;
+                        document.getElementById('setCity').value = city;
+                        localStorage.setItem('dpd_config_v12', JSON.stringify(config));
+                        window.showToast(`Ustawiono: ${city}`, "check", "text-green-500");
+                        sunTimes = null; window.refreshTheme();
+                    }
+                } catch(e) { window.showToast("Błąd GPS", "x", "text-red-500"); }
+            }, () => window.showToast("Błąd GPS", "x", "text-red-500"));
+        };
 
-        async function fetchSunriseSunset(lat, lng) {
-            try {
-                const res = await fetch(`https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`);
-                const data = await res.json();
-                if (data.status === "OK") return { sunrise: new Date(data.results.sunrise), sunset: new Date(data.results.sunset) };
-            } catch (e) {}
-            return null;
-        }
-
-        async function geocodeAddress(addr) {
+        window.geocodeAddress = async function(addr) {
             const search = addr.split('/')[0].trim();
+            if (!search) return null;
             let q = encodeURIComponent(search);
             if (config.city) q += encodeURIComponent(`, ${config.city}`);
             try {
@@ -343,93 +323,40 @@
                 const data = await res.json();
                 return data?.[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
             } catch(e) { return null; }
-        }
+        };
 
-        async function refreshTheme() {
+        window.refreshTheme = async function() {
             let target = config.theme;
-            const autoLabel = document.getElementById('themeAutoLabel');
             if (config.theme === 'auto') {
                 const now = new Date();
-                if (autoLabel) autoLabel.classList.remove('hidden');
                 if (!sunTimes && config.city) {
-                    const coords = await geocodeAddress(config.city);
-                    if (coords) sunTimes = await fetchSunriseSunset(coords.lat, coords.lng);
+                    const coords = await window.geocodeAddress(config.city);
+                    if (coords) {
+                        const res = await fetch(`https://api.sunrise-sunset.org/json?lat=${coords.lat}&lng=${coords.lng}&formatted=0`);
+                        const data = await res.json();
+                        if (data.status === "OK") sunTimes = { sunrise: new Date(data.results.sunrise), sunset: new Date(data.results.sunset) };
+                    }
                 }
                 if (sunTimes) target = (now >= sunTimes.sunrise && now < sunTimes.sunset) ? 'light' : 'dark';
                 else target = (now.getHours() >= 7 && now.getHours() < 19) ? 'light' : 'dark';
-            } else if (autoLabel) autoLabel.classList.add('hidden');
-
-            if (target === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.getElementById('themeQuickIcon')?.setAttribute('data-lucide', 'moon');
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.getElementById('themeQuickIcon')?.setAttribute('data-lucide', 'sun');
             }
+            document.documentElement.classList.toggle('dark', target === 'dark');
+            const icon = document.getElementById('themeQuickIcon');
+            if (icon) icon.setAttribute('data-lucide', target === 'dark' ? 'moon' : 'sun');
+            const autoLabel = document.getElementById('themeAutoLabel');
+            if (autoLabel) autoLabel.classList.toggle('hidden', config.theme !== 'auto');
             lucide.createIcons();
-        }
+        };
 
-        // --- AI I LOGIKA GŁOSOWA ---
-        async function parseWithAI(text) {
-            if (!config.aiEnabled) return null;
-            const finalKey = config.geminiKey || apiKey;
-            if (!finalKey) return null;
+        window.cycleThemeManual = function() {
+            const modes = ['light', 'dark', 'auto'];
+            config.theme = modes[(modes.indexOf(config.theme) + 1) % 3];
+            document.getElementById('setTheme').value = config.theme;
+            window.applySettings();
+        };
 
-            setUIProcessing(true);
-            const modelName = "gemma-3-27b";
-            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: text }] }],
-                systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON." }] },
-                generationConfig: { responseMimeType: "application/json" }
-            };
-
-            try {
-                const res = await fetch(modelUrl, { method: 'POST', body: JSON.stringify(payload) });
-                if (!res.ok) throw "error";
-                const data = await res.json();
-                return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
-            } catch (e) {
-                return null;
-            } finally {
-                setUIProcessing(false);
-            }
-        }
-
-        async function handleVoiceResult(text) {
-            if (!text || text.trim().length < 2) return;
-            
-            let aiData = null;
-            if (config.aiEnabled) {
-                aiData = await parseWithAI(text);
-            }
-
-            if (aiData && aiData.address) {
-                addEntry(aiData.address, aiData.note, aiData.type);
-            } else {
-                // Manual Fallback
-                const low = text.toLowerCase();
-                const kw = (config.stopWord || "notatka").toLowerCase();
-                const split = low.indexOf(kw);
-                let addr = text, note = "", type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
-                if (split !== -1) {
-                    addr = text.substring(0, split).trim();
-                    note = text.substring(split + kw.length).trim();
-                }
-                addEntry(formatPolishNumbers(addr), note, type);
-            }
-        }
-
-        function formatPolishNumbers(text) {
-            let t = text.toLowerCase().trim();
-            const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
-            Object.keys(numMap).forEach(w => t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
-            return t.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
-        }
-
-        // --- ZAPISYWANIE I WIDOK ---
-        function addEntry(addr, note = "", type = 'delivery') {
+        window.addEntry = function(addr, note = "", type = 'delivery') {
+            if (!addr || addr.trim().length < 2) return;
             const entry = {
                 id: Date.now(),
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
@@ -438,52 +365,46 @@
                 note: (note || "").trim(),
                 tip: 0, type, lat: null, lng: null
             };
-
             addresses.unshift(entry);
-            saveAndRender();
-            showToast("Dodano stop", "check", "text-green-500");
-
-            geocodeAddress(entry.address).then(coords => {
+            window.saveAndRender();
+            window.showToast("Dodano stop", "check", "text-green-500");
+            window.geocodeAddress(entry.address).then(coords => {
                 if (coords) {
                     entry.lat = coords.lat; entry.lng = coords.lng;
                     localStorage.setItem('dpd_logs_v13', JSON.stringify(addresses));
-                    if (currentView === 'map') renderMarkers();
+                    if (currentView === 'map') window.renderMarkers();
                 }
             });
-        }
+        };
 
-        function saveAndRender() {
+        window.saveAndRender = function() {
             localStorage.setItem('dpd_logs_v13', JSON.stringify(addresses));
             const today = getTodayStr();
             const todayLogs = addresses.filter(a => a.date === today);
             
-            const delEl = document.getElementById('deliveryCounter');
-            const picEl = document.getElementById('pickupCounter');
-            const tipEl = document.getElementById('tipTotal');
-            
-            if (delEl) delEl.textContent = todayLogs.filter(a => a.type === 'delivery').length;
-            if (picEl) picEl.textContent = todayLogs.filter(a => a.type === 'pickup').length;
-            if (tipEl) tipEl.textContent = todayLogs.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2) + " zł";
+            document.getElementById('deliveryCounter').textContent = todayLogs.filter(a => a.type === 'delivery').length;
+            document.getElementById('pickupCounter').textContent = todayLogs.filter(a => a.type === 'pickup').length;
+            document.getElementById('tipTotal').textContent = todayLogs.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2) + " zł";
 
             const listEl = document.getElementById('addressList');
             const emptyEl = document.getElementById('emptyState');
             if (listEl) {
                 if (todayLogs.length === 0) {
                     listEl.innerHTML = '';
-                    if (emptyEl) emptyEl.classList.remove('hidden');
+                    emptyEl?.classList.remove('hidden');
                 } else {
-                    if (emptyEl) emptyEl.classList.add('hidden');
+                    emptyEl?.classList.add('hidden');
                     listEl.innerHTML = todayLogs.map(item => `
-                        <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 text-left">
+                        <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <span class="text-[8px] font-black uppercase opacity-60">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
                                     <p class="text-sm font-bold mt-1">${item.address}</p>
                                 </div>
                                 <div class="flex gap-1 shrink-0">
-                                    <button onclick="toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
-                                    <button onclick="openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteAddress(${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
+                                    <button onclick="window.openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
+                                    <button onclick="window.deleteAddress(${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </div>
                             ${item.note ? `<p class="mt-2 text-[10px] opacity-60 italic border-t border-gray-50 dark:border-zinc-700 pt-1">${item.note}</p>` : ''}
@@ -492,19 +413,104 @@
                 }
             }
             lucide.createIcons();
-            setAIStatusUI();
+            window.setAIStatusUI();
+        };
+
+        window.handleVoiceResult = async function(text) {
+            if (!text || text.trim().length < 2) return;
+            let aiData = null;
+            if (config.aiEnabled) {
+                window.setUIProcessing(true);
+                try {
+                    const modelName = "gemma-3-27b";
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.geminiKey || apiKey}`, {
+                        method: 'POST', body: JSON.stringify({
+                            contents: [{ parts: [{ text: text }] }],
+                            systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON." }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        aiData = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
+                    }
+                } catch (e) { aiData = null; }
+                window.setUIProcessing(false);
+            }
+            if (aiData && aiData.address) {
+                window.addEntry(aiData.address, aiData.note, aiData.type);
+            } else {
+                const low = text.toLowerCase();
+                const kw = (config.stopWord || "notatka").toLowerCase();
+                const split = low.indexOf(kw);
+                let addr = text, note = "", type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
+                if (split !== -1) { addr = text.substring(0, split).trim(); note = text.substring(split + kw.length).trim(); }
+                const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
+                let finalAddr = addr.toLowerCase();
+                Object.keys(numMap).forEach(w => finalAddr = finalAddr.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
+                finalAddr = finalAddr.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
+                window.addEntry(finalAddr, note, type);
+            }
+        };
+
+        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
+        if (Recog) {
+            const recog = new Recog();
+            recog.lang = 'pl-PL'; recog.interimResults = true;
+            recog.onstart = () => {
+                isRecording = true; lastTranscript = ""; interimTranscript = "";
+                document.getElementById('micBtn')?.classList.add('pulse-red');
+                document.getElementById('livePreview')?.classList.remove('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '1';
+                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(w => {
+                    wakeLock = w;
+                    document.getElementById('wakeDot').className = "w-1.5 h-1.5 bg-green-500 rounded-full";
+                }).catch(() => {});
+            };
+            recog.onresult = (e) => {
+                let inter = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
+                    else inter += e.results[i][0].transcript;
+                }
+                interimTranscript = inter;
+                document.getElementById('liveText').textContent = inter || lastTranscript || "Słucham...";
+            };
+            recog.onend = () => {
+                isRecording = false;
+                document.getElementById('micBtn')?.classList.remove('pulse-red');
+                document.getElementById('livePreview')?.classList.add('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '0';
+                const finalSpeech = lastTranscript || interimTranscript;
+                if (finalSpeech) window.handleVoiceResult(finalSpeech);
+            };
+            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
         }
 
-        // --- MAPA ---
-        function initMap() { 
-            if (!map) { 
-                map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13); 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
-                markersGroup = L.layerGroup().addTo(map); 
-            } 
-        }
+        window.toggleView = function(v) {
+            ['listView', 'mapView', 'settingsView'].forEach(id => document.getElementById(id).classList.add('view-hidden'));
+            document.getElementById(v + 'View').classList.remove('view-hidden');
+            currentView = v;
+            const tText = document.getElementById('toggleText');
+            const tIcon = document.getElementById('toggleIcon');
+            if (v === 'map') {
+                tText.textContent = 'Lista'; tIcon.setAttribute('data-lucide', 'list');
+                if (!map) {
+                    map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                    markersGroup = L.layerGroup().addTo(map);
+                }
+                setTimeout(() => { map.invalidateSize(); window.renderMarkers(); }, 200);
+            } else {
+                tText.textContent = 'Mapa'; tIcon.setAttribute('data-lucide', 'map');
+            }
+            lucide.createIcons();
+        };
 
-        function renderMarkers() {
+        window.handleMapToggle = () => currentView === 'map' ? window.toggleView('list') : window.toggleView('map');
+        window.renderMarkers = () => {
             if (!markersGroup) return; markersGroup.clearLayers();
             const today = getTodayStr();
             const pts = addresses.filter(a => a.date === today && a.lat);
@@ -516,126 +522,42 @@
                 bounds.extend([p.lat, p.lng]);
             });
             map.fitBounds(bounds, { padding: [50, 50] }); lucide.createIcons();
-        }
+        };
 
-        // --- NAWIGACJA I WIDOKI ---
-        function toggleView(v) {
-            const vs = { list: 'listView', map: 'mapView', settings: 'settingsView' };
-            Object.values(vs).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('view-hidden');
-            });
-            const target = document.getElementById(vs[v]);
-            if (target) target.classList.remove('view-hidden');
-            currentView = v;
-            const tText = document.getElementById('toggleText');
-            const tIcon = document.getElementById('toggleIcon');
-            if (v === 'map') {
-                if (tText) tText.textContent = 'Lista';
-                if (tIcon) tIcon.setAttribute('data-lucide', 'list');
-                initMap(); setTimeout(() => { if (map) map.invalidateSize(); renderMarkers(); }, 200);
-            } else {
-                if (tText) tText.textContent = 'Mapa';
-                if (tIcon) tIcon.setAttribute('data-lucide', 'map');
-            }
-            lucide.createIcons();
-        }
-
-        function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
-
-        function switchSettingsTab(tab) {
+        window.switchSettingsTab = (tab) => {
             const isConfig = tab === 'config';
-            const btnC = document.getElementById('tabBtnConfig');
-            const btnH = document.getElementById('tabBtnHistory');
-            const contC = document.getElementById('tabContentConfig');
-            const contH = document.getElementById('tabContentHistory');
-            if (btnC) btnC.className = isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            if (btnH) btnH.className = !isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            if (contC) contC.classList.toggle('active', isConfig);
-            if (contH) contH.classList.toggle('active', !isConfig);
-            if (!isConfig) renderGroupedHistory();
-            lucide.createIcons();
-        }
-
-        function renderGroupedHistory() {
-            const list = document.getElementById('historyList');
-            if (!list || !addresses.length) return;
-            const grouped = addresses.reduce((acc, curr) => {
-                if (!acc[curr.date]) acc[curr.date] = { date: curr.date, stops: [] };
-                acc[curr.date].stops.push(curr);
-                return acc;
-            }, {});
-            const sorted = Object.keys(grouped).sort((a,b) => {
-                const partsA = a.split('.'), partsB = b.split('.');
-                return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
-            });
-            list.innerHTML = sorted.map(k => {
-                const day = grouped[k];
-                const tips = day.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
-                return `
-                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
-                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
-                        <div class="text-left text-left">
-                            <p class="text-[11px] font-black uppercase text-dpd-red leading-none">${day.date}</p>
-                            <p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p>
+            document.getElementById('tabBtnConfig').className = isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
+            document.getElementById('tabBtnHistory').className = !isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
+            document.getElementById('tabContentConfig').classList.toggle('active', isConfig);
+            document.getElementById('tabContentHistory').classList.toggle('active', !isConfig);
+            if (!isConfig) {
+                const list = document.getElementById('historyList');
+                const grouped = addresses.reduce((acc, curr) => {
+                    if (!acc[curr.date]) acc[curr.date] = { date: curr.date, stops: [] };
+                    acc[curr.date].stops.push(curr); return acc;
+                }, {});
+                const sorted = Object.keys(grouped).sort((a,b) => {
+                    const partsA = a.split('.'), partsB = b.split('.');
+                    return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
+                });
+                list.innerHTML = sorted.map(k => {
+                    const d = grouped[k];
+                    const tips = d.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
+                    return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
+                        <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
+                            <div class="text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none">${d.date}</p><p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p></div>
+                            <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                         </div>
-                        <div class="flex gap-1 text-left">
-                            <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 text-left"><i data-lucide="download" class="w-4 h-4 text-left"></i></button>
-                            <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left"></i></button>
+                        <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
+                            ${d.stops.map(s => `<div class="flex justify-between text-[10px]"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
                         </div>
-                    </div>
-                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
-                        ${day.stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80 text-left">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'} text-left text-left text-left">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
-                    </div>
-                </div>`;
-            }).join('');
-            lucide.createIcons();
-        }
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            }
+        };
 
-        // --- SPEECH ---
-        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
-        if (Recog) {
-            const recog = new Recog();
-            recog.lang = 'pl-PL'; recog.interimResults = true;
-            recog.onstart = () => {
-                isRecording = true; lastTranscript = "";
-                document.getElementById('micBtn')?.classList.add('pulse-red');
-                document.getElementById('livePreview')?.classList.remove('hidden');
-                const label = document.getElementById('micLabel');
-                if (label) label.style.opacity = '1';
-                requestWakeLock();
-            };
-            recog.onresult = (e) => {
-                let inter = '';
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
-                    else inter += e.results[i][0].transcript;
-                }
-                const live = document.getElementById('liveText');
-                if (live) live.textContent = inter || lastTranscript || "Słucham...";
-            };
-            recog.onend = () => {
-                isRecording = false;
-                document.getElementById('micBtn')?.classList.remove('pulse-red');
-                document.getElementById('livePreview')?.classList.add('hidden');
-                const label = document.getElementById('micLabel');
-                if (label) label.style.opacity = '0';
-                if (lastTranscript) handleVoiceResult(lastTranscript);
-                lastTranscript = "";
-            };
-            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
-        }
-
-        // --- INNE AKCJE ---
-        function toggleType(id) { const idx = addresses.findIndex(a => a.id === id); if (idx !== -1) { addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery'; saveAndRender(); } }
-        function deleteAddress(id) { addresses = addresses.filter(a => a.id != id); saveAndRender(); }
-        function confirmReset() { const today = getTodayStr(); addresses = addresses.filter(a => a.date !== today); saveAndRender(); }
-        function confirmAllClear() { addresses = []; saveAndRender(); }
-        function openTipModal(id) { activeTipId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('tipAddress').textContent = it.address; document.getElementById('tipModal').classList.add('modal-active'); } }
-        function closeTipModal() { document.getElementById('tipModal').classList.remove('modal-active'); }
-        function confirmTip() { const val = parseFloat(document.getElementById('tipInput').value) || 0; const idx = addresses.findIndex(a => a.id === activeTipId); if (idx !== -1) { addresses[idx].tip = val; saveAndRender(); } closeTipModal(); }
-        
-        function applySettings() {
+        window.applySettings = () => {
             config.aiEnabled = document.getElementById('setAiEnabled').checked;
             config.geminiKey = document.getElementById('setGeminiKey').value;
             config.city = document.getElementById('setCity').value;
@@ -643,42 +565,35 @@
             config.stopWord = document.getElementById('setStopWord').value || "notatka";
             config.gpsEnabled = document.getElementById('setGpsEnabled').checked;
             localStorage.setItem('dpd_config_v12', JSON.stringify(config));
-            sunTimes = null; refreshTheme(); saveAndRender();
-        }
+            sunTimes = null; window.refreshTheme(); window.saveAndRender();
+        };
 
-        function exportToCSV() {
+        window.toggleType = (id) => { const idx = addresses.findIndex(a => a.id === id); if (idx !== -1) { addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery'; window.saveAndRender(); } };
+        window.deleteAddress = (id) => { addresses = addresses.filter(a => a.id != id); window.saveAndRender(); };
+        window.confirmReset = () => { const today = getTodayStr(); addresses = addresses.filter(a => a.date !== today); window.saveAndRender(); };
+        window.confirmAllClear = () => { addresses = []; window.saveAndRender(); };
+        window.openTipModal = (id) => { activeTipId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('tipAddress').textContent = it.address; document.getElementById('tipModal').classList.add('modal-active'); } };
+        window.closeTipModal = () => document.getElementById('tipModal').classList.remove('modal-active');
+        window.confirmTip = () => { const val = parseFloat(document.getElementById('tipInput').value) || 0; const idx = addresses.findIndex(a => a.id === activeTipId); if (idx !== -1) { addresses[idx].tip = val; window.saveAndRender(); } window.closeTipModal(); };
+        window.exportToCSV = () => {
             const today = getTodayStr();
             const data = addresses.filter(a => a.date === today); if (!data.length) return;
             let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + data.map(r => `${r.date};${r.time};${r.type};"${r.address}";"${r.note}";${r.tip};${r.lat || ''};${r.lng || ''}`).join("\n");
             const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(b); link.download = `Raport_${today.replace(/\./g, '_')}.csv`; link.click();
-        }
-        async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); const d = document.getElementById('wakeDot'); if (d) d.className = "w-1.5 h-1.5 bg-green-500 rounded-full"; } catch(e){} } }
+        };
 
-        // --- INICJALIZACJA ---
         window.addEventListener('DOMContentLoaded', () => {
-            const aiEl = document.getElementById('setAiEnabled');
-            const keyEl = document.getElementById('setGeminiKey');
-            const cityEl = document.getElementById('setCity');
-            const themeEl = document.getElementById('setTheme');
-            const stopEl = document.getElementById('setStopWord');
-            const gpsEl = document.getElementById('setGpsEnabled');
-
-            if (aiEl) aiEl.checked = config.aiEnabled !== false;
-            if (keyEl) keyEl.value = config.geminiKey || "";
-            if (cityEl) cityEl.value = config.city || "";
-            if (themeEl) themeEl.value = config.theme || "auto";
-            if (stopEl) stopEl.value = config.stopWord || "notatka";
-            if (gpsEl) gpsEl.checked = config.gpsEnabled !== false;
-
-            // Domyślne pobieranie miasta, jeśli puste
-            if (!config.city && navigator.geolocation) {
-                updateCityFromGps();
-            }
-
-            refreshTheme(); 
-            saveAndRender();
-            setInterval(refreshTheme, 60000);
+            document.getElementById('setAiEnabled').checked = config.aiEnabled !== false;
+            document.getElementById('setGeminiKey').value = config.geminiKey || "";
+            document.getElementById('setCity').value = config.city || "";
+            document.getElementById('setTheme').value = config.theme || "auto";
+            document.getElementById('setStopWord').value = config.stopWord || "notatka";
+            document.getElementById('setGpsEnabled').checked = config.gpsEnabled !== false;
+            if (!config.city && navigator.geolocation) window.updateCityFromGps();
+            window.refreshTheme(); 
+            window.saveAndRender();
+            setInterval(window.refreshTheme, 60000);
         });
     </script>
 </body>
