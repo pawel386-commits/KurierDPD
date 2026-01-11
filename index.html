@@ -105,6 +105,7 @@
                 </div>
             </div>
             
+            <!-- Liczniki -->
             <div class="mt-4 grid grid-cols-3 gap-2">
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
                     <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Doręczenia</span>
@@ -123,6 +124,7 @@
     </header>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
+        <!-- Lista Adresów -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -138,10 +140,12 @@
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
 
+        <!-- Mapa -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
+        <!-- Ustawienia -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
             <div class="header-safe-area flex-none"></div>
             <div class="p-4 flex-none text-left">
@@ -194,18 +198,20 @@
                     </label>
                     <button onclick="window.handleConfirmAction('clear_all')" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
                 </div>
+                <!-- Historia -->
                 <div id="tabContentHistory" class="tab-content space-y-4">
                     <div id="historyList" class="space-y-4"></div>
                 </div>
+                <!-- Dokumentacja -->
                 <div id="tabContentDoc" class="tab-content space-y-4">
                     <div class="bg-gray-50 dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <h3 class="text-xs font-black uppercase text-dpd-red mb-3">Strażnik Funkcji v1.2</h3>
+                        <h3 class="text-xs font-black uppercase text-dpd-red mb-3">Strażnik Funkcji v1.3</h3>
                         <ul class="space-y-3 text-[10px] font-bold text-gray-500 dark:text-zinc-400 text-left">
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Parsowanie:</b> Poprawiona logika łączenia liczebników (np. "osiem naście" -> 18) i czyszczenie ukośników.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>AI Engine:</b> Model gemma-3-27b z instrukcją usuwania błędów STT.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Nagłówek:</b> Trzy osobne karty liczników. Brak daty u góry.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Edycja:</b> Przywrócona funkcja edycji adresu i notatki.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Bezpieczeństwo:</b> System modali potwierdzeń (Delete/Reset/Clear).</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Parsowanie v1.3:</b> Inteligentna ochrona nazw ulic (np. Wiatraczna). Łączenie ukośników "przez" / "na" tylko przy cyfrach.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>AI Engine:</b> Gemma-3-27b z instrukcją "STT Fix" i ochroną nazw ulic.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Modale:</b> Niestandardowy system potwierdzeń usunięcia, resetu i czyszczenia bazy.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Edycja:</b> Funkcja edycji adresu i notatki w modalnym oknie.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Liczniki:</b> Trzy osobne karty w nagłówku. Data ukryta.</span></li>
                         </ul>
                         <p class="mt-4 text-[8px] opacity-40 uppercase font-black text-center text-left">Nie usuwać funkcji bez polecenia</p>
                     </div>
@@ -214,12 +220,12 @@
         </div>
     </main>
 
-    <!-- Modale Potwierdzeń -->
-    <div id="confirmModal" class="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+    <!-- Modal Potwierdzenia -->
+    <div id="confirmModal" class="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-center">
             <i data-lucide="alert-triangle" class="w-12 h-12 text-dpd-red mx-auto mb-4"></i>
-            <h3 class="text-lg font-black uppercase mb-2">Jesteś pewien?</h3>
-            <p id="confirmModalText" class="text-xs text-gray-500 dark:text-gray-400 mb-6 font-medium">Tej operacji nie można cofnąć.</p>
+            <h3 class="text-lg font-black uppercase mb-2">Potwierdź akcję</h3>
+            <p id="confirmModalText" class="text-xs text-gray-500 mb-6 font-medium">Czy na pewno chcesz to zrobić?</p>
             <div class="flex gap-3">
                 <button onclick="window.closeConfirmModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-4 rounded-2xl font-black uppercase text-[10px]">Anuluj</button>
                 <button id="confirmBtnAction" class="flex-1 bg-dpd-red text-white py-4 rounded-2xl font-black uppercase text-[10px]">Tak</button>
@@ -228,7 +234,7 @@
     </div>
 
     <!-- Modal Edycji -->
-    <div id="editModal" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left text-left">
+    <div id="editModal" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
             <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
             <div class="space-y-4 text-left">
@@ -248,9 +254,9 @@
         </div>
     </div>
 
-    <!-- Napiwek Modal -->
-    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+    <!-- Modal Napiwku -->
+    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
             <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
             <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
             <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
@@ -267,7 +273,7 @@
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
             <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
                 <button onclick="window.handleConfirmAction('reset_day')" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
-                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    <i data-lucide="trash-2" class="w-6 h-6 text-left"></i>
                     <span class="text-[10px] font-bold uppercase">Reset</span>
                 </button>
                 <div class="relative -top-10 text-center">
@@ -285,7 +291,7 @@
     </div>
 
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
-        <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-left"></i><span id="toastText"></span>
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
@@ -298,7 +304,7 @@
         }));
 
         let isRecording = false, isProcessingAI = false, lastTranscript = "", interimTranscript = "";
-        let wakeLock = null, currentView = 'list', map = null, markersGroup = null, cachedGps = null;
+        let wakeLock = null, currentView = 'list', map = null, markersGroup = null;
         let activeTipId = null, activeEditId = null, sunTimes = null;
 
         function getTodayStr() {
@@ -306,19 +312,19 @@
             return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
         }
 
-        // --- GLOBALNE FUNKCJE (IPHONE FIX) ---
+        // --- GLOBALNE FUNKCJE MODALI ---
         window.handleConfirmAction = function(type, id = null) {
             const modal = document.getElementById('confirmModal');
             const text = document.getElementById('confirmModalText');
             const btn = document.getElementById('confirmBtnAction');
             if (type === 'delete_stop') {
-                text.textContent = "Czy usunąć ten adres?";
+                text.textContent = "Usunąć ten adres z listy?";
                 btn.onclick = () => { window.deleteAddress(id); window.closeConfirmModal(); };
             } else if (type === 'reset_day') {
-                text.textContent = "Czy wyczyścić dzisiejszą listę?";
+                text.textContent = "Wyczyścić dzisiejszą listę stopów?";
                 btn.onclick = () => { window.confirmReset(); window.closeConfirmModal(); };
             } else if (type === 'clear_all') {
-                text.textContent = "UWAGA! To usunie CAŁĄ historię. Czy kontynuować?";
+                text.textContent = "UWAGA! To usunie CAŁĄ historię. Kontynuować?";
                 btn.onclick = () => { window.confirmAllClear(); window.closeConfirmModal(); };
             }
             modal.classList.add('modal-active');
@@ -349,6 +355,7 @@
             window.closeEditModal();
         };
 
+        // --- UI & LOGIKA ---
         window.setAIStatusUI = function() {
             const dot = document.getElementById('aiDot');
             const label = document.getElementById('aiStatusLabel');
@@ -449,27 +456,27 @@
             window.applySettings();
         };
 
-        // --- LOGIKA PARSOWANIA I AI ---
+        // --- POPRAWIONE PARSOWANIE (v1.3 FIX) ---
         window.formatPolishNumbers = function(text) {
             let t = text.toLowerCase().trim();
             
-            // 1. Mapowanie podstawowych liczebników
             const numMap = { 
                 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 
                 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10'
             };
             Object.keys(numMap).forEach(w => t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
 
-            // 2. Naprawa rozbitych liczebników (iPhone STT Fix)
-            // Przykład: "8 naście" -> "18", "2 dziesiącia" -> "20"
+            // STT FIX: osiem naście -> 18
             t = t.replace(/(\d+)\s+naście\b/g, (m, g1) => (parseInt(g1) + 10).toString());
             t = t.replace(/(\d+)\s+dziesiąt\b/g, (m, g1) => (parseInt(g1) * 10).toString());
-            t = t.replace(/(\d+)\s+dziesięć\b/g, (m, g1) => (parseInt(g1) * 10).toString());
 
-            // 3. Naprawa zapisu ukośników i numeracji (np. "24 f przez 12 b" -> "24f/12b")
-            t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2'); // "24 f" -> "24f"
-            t = t.replace(/\s*(przez|na|łamane)\s*/g, '/'); // "przez" -> "/"
-            t = t.replace(/\s*\/\s*/g, '/'); // usuń spacje wokół /
+            // INTELIGENTNA NAPRAWA "NA" / "PRZEZ"
+            // Zamieniaj "na" tylko jeśli jest OTOCZONE spacjami i znajduje się przy cyfrach
+            t = t.replace(/(\d+)\s+(przez|na|łamane|łamane\s+na)\s+(\d+)/g, '$1/$3');
+            t = t.replace(/(\d+[a-z]?)\s+(przez|na|łamane|łamane\s+na)\s+(\d+[a-z]?)/g, '$1/$3');
+            
+            // Scalanie liter (24 f -> 24f)
+            t = t.replace(/(\d+)\s+([a-z])\b/g, '$1$2');
             
             return t;
         };
@@ -486,9 +493,9 @@
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `Surowa mowa (STT): "${text}"` }] }],
+                            contents: [{ parts: [{ text: `STT Input: "${text}"` }] }],
                             systemInstruction: { 
-                                parts: [{ text: "Jesteś asystentem kuriera DPD. Twoim zadaniem jest wyodrębnić dane do JSON (address, note, type). UWAGA: Napraw błędy mowy! Jeśli słyszysz 'osiem naście', zapisz '18'. Jeśli słyszysz 'numer 4 f łamane na 12 b', zapisz '4f/12b'. Pola: address (ulica i numer), note (dodatki), type ('delivery' lub 'pickup')." }] 
+                                parts: [{ text: "Jesteś asystentem kuriera DPD. Wyodrębnij JSON (address, note, type). WAŻNE: Napraw błędy mowy! 'osiem naście' -> '18'. '24 f przez 12' -> '24f/12'. NIE zmieniaj nazw ulic kończących się na 'na' (np. 'Wiatraczna' zostaje 'Wiatraczna'). Pola: address, note, type ('delivery' lub 'pickup')." }] 
                             },
                             generationConfig: { responseMimeType: "application/json" }
                         })
@@ -504,7 +511,6 @@
             if (aiData && aiData.address) {
                 window.addEntry(aiData.address, aiData.note, aiData.type);
             } else {
-                // Lokalny fallback z poprawioną logiką
                 const low = text.toLowerCase();
                 const kw = (config.stopWord || "notatka").toLowerCase();
                 const split = low.indexOf(kw);
@@ -524,10 +530,7 @@
                 document.getElementById('livePreview')?.classList.remove('hidden');
                 const label = document.getElementById('micLabel');
                 if (label) label.style.opacity = '1';
-                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(w => {
-                    wakeLock = w;
-                    document.getElementById('wakeDot').className = "w-1.5 h-1.5 bg-green-500 rounded-full";
-                }).catch(() => {});
+                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(w => wakeLock = w).catch(() => {});
             };
             recog.onresult = (e) => {
                 let inter = '';
@@ -588,7 +591,7 @@
                     document.getElementById('emptyState')?.classList.add('hidden');
                     listEl.innerHTML = todayLogs.map(item => `
                         <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700">
-                            <div class="flex justify-between items-start">
+                            <div class="flex justify-between items-start text-left">
                                 <div class="flex-1">
                                     <span class="text-[8px] font-black uppercase opacity-60">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
                                     <p class="text-sm font-bold mt-1">${item.address}</p>
@@ -631,7 +634,7 @@
             if (!pts.length) return;
             const bounds = L.latLngBounds();
             pts.forEach(p => {
-                const icon = L.divIcon({ html: `<i data-lucide="map-pin" class="w-8 h-8 text-dpd-red text-left"></i>`, className: 'custom-icon', iconSize: [32, 32], iconAnchor: [16, 32] });
+                const icon = L.divIcon({ html: `<i data-lucide="map-pin" class="w-8 h-8 text-dpd-red"></i>`, className: 'custom-icon', iconSize: [32, 32], iconAnchor: [16, 32] });
                 L.marker([p.lat, p.lng], { icon }).bindPopup(p.address).addTo(markersGroup);
                 bounds.extend([p.lat, p.lng]);
             });
@@ -640,7 +643,7 @@
 
         window.switchSettingsTab = (tab) => {
             ['config', 'history', 'doc'].forEach(t => {
-                document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1)).className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400 text-left';
+                document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1)).className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400';
                 document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('active');
             });
             const btn = document.getElementById('tabBtn' + tab.charAt(0).toUpperCase() + tab.slice(1));
@@ -655,7 +658,7 @@
             const list = document.getElementById('historyList');
             const grouped = addresses.reduce((acc, curr) => { if (!acc[curr.date]) acc[curr.date] = { date: curr.date, stops: [] }; acc[curr.date].stops.push(curr); return acc; }, {});
             const sorted = Object.keys(grouped).sort((a,b) => { const partsA = a.split('.'), partsB = b.split('.'); return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]); });
-            list.innerHTML = sorted.map(k => `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4 text-left"><div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left"><div class="text-left text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none text-left">${grouped[k].date}</p></div><button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left"></i></button></div><div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">${grouped[k].stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80 text-left">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'} text-left">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}</div></div>`).join('');
+            list.innerHTML = sorted.map(k => `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4"><div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left"><div class="text-left text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none">${grouped[k].date}</p></div><button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button></div><div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">${grouped[k].stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}</div></div>`).join('');
             lucide.createIcons();
         };
 
