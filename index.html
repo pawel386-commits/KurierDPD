@@ -38,7 +38,6 @@
         .header-safe-area { padding-top: env(safe-area-inset-top); background-color: var(--dpd-red); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-        /* Pulse Animations */
         .pulse-red { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0.7); }
@@ -61,30 +60,14 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .marker-cluster-custom {
-            background: #dc0032;
-            border: 2px solid white;
-            border-radius: 50%;
-            color: white;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
-        .leaflet-popup-content { margin: 0; width: 220px !important; }
-
-        /* iPhone Optimization */
-        input, select, textarea { font-size: 16px !important; }
-        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input, select, textarea { font-size: 16px !important; } /* Zapobieganie Auto-zoom na iOS */
     </style>
 </head>
 <body class="text-dpd-dark dark:text-gray-100 flex flex-col h-full overflow-hidden text-left transition-colors duration-300">
 
     <!-- Nagłówek -->
-    <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none text-left">
+    <header class="bg-dpd-red text-white shadow-lg z-20 w-full flex-none">
         <div class="header-safe-area"></div>
         <div class="p-4 pt-2 pb-4">
             <div class="flex justify-between items-center">
@@ -97,20 +80,21 @@
                         <p id="headerSubtitle" class="text-[8px] font-bold opacity-75 uppercase tracking-[0.2em]">DPD Logistics</p>
                     </div>
                 </div>
-                <div class="flex flex-col items-end gap-2">
-                    <div class="flex items-center gap-1.5">
-                        <!-- Wskaźnik AI Status -->
-                        <div id="aiStatusTag" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10">
-                            <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> <span id="aiStatusText">AI: OK</span>
+                <div class="flex flex-col items-end gap-2 text-right">
+                    <div class="flex items-center gap-1.5 justify-end">
+                        <!-- Status AI -->
+                        <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
+                            <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
+                            <span id="aiStatusLabel">AI: OK</span>
                         </div>
-                        <!-- Wskaźnik Blokady -->
-                        <div id="wakeStatus" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10">
+                        <!-- Blokada ekranu -->
+                        <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
                         </div>
-                        <div id="currentDate" class="text-[10px] font-bold opacity-90 tracking-wider whitespace-nowrap">--.--.----</div>
                     </div>
-                    <div class="flex gap-2 items-center">
-                        <button onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all">
+                    <div class="flex gap-2 items-center justify-end">
+                        <div id="currentDate" class="text-[10px] font-bold opacity-90 tracking-wider whitespace-nowrap mr-2">--.--.----</div>
+                        <button id="toggleBtn" onclick="handleMapToggle()" class="inline-flex items-center gap-2 text-[10px] font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all">
                             <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5"></i> <span id="toggleText">Mapa</span>
                         </button>
                         <button onclick="cycleThemeManual()" class="bg-black/20 w-9 h-9 flex flex-col items-center justify-center rounded-full border border-white/10 active:scale-90 shrink-0">
@@ -124,26 +108,26 @@
                 </div>
             </div>
             
-            <!-- Nowy układ liczników (oddzielne okienka) -->
+            <!-- Trzy osobne karty liczników -->
             <div class="mt-4 grid grid-cols-3 gap-2">
-                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Doręczenia</span>
-                    <span id="deliveryCounter" class="text-xl font-black leading-none text-white">0</span>
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center">
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Doręczenia</span>
+                    <span id="deliveryCounter" class="text-xl font-black leading-none">0</span>
                 </div>
-                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Odbiory</span>
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center">
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Odbiory</span>
                     <span id="pickupCounter" class="text-xl font-black leading-none text-zinc-300">0</span>
                 </div>
-                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
-                    <span class="text-[8px] font-black uppercase opacity-70 tracking-tighter text-white mb-0.5">Napiwki</span>
+                <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center">
+                    <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Napiwki</span>
                     <span id="tipTotal" class="text-xl font-black leading-none text-green-300">0.00 zł</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
-        <!-- Lista Stopów -->
+    <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
+        <!-- Widok Listy -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -159,15 +143,15 @@
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
 
-        <!-- Mapa -->
+        <!-- Widok Mapy -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
-        <!-- Ustawienia -->
-        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
+        <!-- Widok Ustawień -->
+        <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden">
             <div class="header-safe-area flex-none"></div>
-            <div class="p-4 flex-none">
+            <div class="p-4 flex-none text-left">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
                     <button onclick="toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -181,11 +165,11 @@
             <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40">
                 <div id="tabContentConfig" class="tab-content active space-y-6">
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Klucz API Google (Gemma-3-27B)</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Klucz API Gemma-3-27B</label>
                         <input type="password" id="setGeminiKey" oninput="applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400">Motyw Aplikacji</label>
+                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400 text-left">Motyw Aplikacji</label>
                         <select id="setTheme" onchange="applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer">
                             <option value="light">Jasny</option>
                             <option value="dark">Ciemny</option>
@@ -193,15 +177,11 @@
                         </select>
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Miasto Główne</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Miasto Główne</label>
                         <input type="text" id="setCity" oninput="applySettings()" placeholder="Np. Wrocław" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Imię Kuriera</label>
-                        <input type="text" id="setCourierName" oninput="applySettings()" placeholder="Np. Jan" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
-                    </div>
-                    <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase">Hasło notatki (fallback)</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Hasło notatki (fallback)</label>
                         <input type="text" id="setStopWord" oninput="applySettings()" placeholder="notatka" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                     <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
@@ -217,47 +197,15 @@
         </div>
     </main>
 
-    <!-- Panele boczne i Modale -->
-    <div id="confirmModal" class="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
-            <i data-lucide="alert-triangle" class="w-10 h-10 text-dpd-red mx-auto mb-4 text-center"></i>
-            <h3 class="text-lg font-black uppercase mb-2 text-center">Jesteś pewien?</h3>
-            <p id="confirmMessage" class="text-xs text-gray-500 text-center mb-6"></p>
-            <div class="flex gap-3">
-                <button onclick="closeConfirm()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Nie</button>
-                <button id="confirmActionBtn" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Tak, usuń</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+    <!-- Napiwek Modal -->
+    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
             <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
             <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
             <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
-            <div class="flex gap-3 text-left">
+            <div class="flex gap-3">
                 <button onclick="closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
                 <button onclick="confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="editModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
-        <div class="bg-white dark:bg-zinc-900 w-full max-sm:max-w-xs w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
-            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
-            <div class="space-y-4">
-                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
-                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Adres</label>
-                    <input type="text" id="editAddressInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
-                </div>
-                <div class="bg-gray-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-gray-100 dark:border-zinc-700">
-                    <label class="text-[9px] font-bold text-gray-500 block mb-1 uppercase">Notatka</label>
-                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none leading-snug"></textarea>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeEditModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
-                <button onclick="confirmEdit()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
             </div>
         </div>
     </div>
@@ -265,7 +213,7 @@
     <!-- Panel Dolny -->
     <div id="bottomBar" class="fixed bottom-0 left-0 right-0 z-30">
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
-        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6 text-left">
+        <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
             <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
                 <button onclick="confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
@@ -285,12 +233,14 @@
         </div>
     </div>
 
+    <!-- Toast -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
         <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
     </div>
 
     <script>
-        const apiKeyPlaceholder = "";
+        // Konfiguracja API i Stanu
+        const apiKey = ""; 
         let addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]');
         let config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
             name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: ""
@@ -298,33 +248,45 @@
 
         let isRecording = false, isProcessingAI = false, lastTranscript = "";
         let wakeLock = null, currentView = 'list', map = null, markersGroup = null, cachedGps = null;
-        let activeTipId = null, activeEditId = null, confirmCallback = null;
-        let sunTimes = null;
+        let activeTipId = null, sunTimes = null;
 
-        lucide.createIcons();
+        // --- GWARANTOWANY FORMAT DATY (Fix dla iPhone) ---
+        function getTodayStr() {
+            const d = new Date();
+            return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+        }
 
-        // --- UTILS ---
-        function setAIStatus(status) {
+        // --- UI UTILS ---
+        function setAIStatusUI(ok) {
             const dot = document.getElementById('aiDot');
-            const text = document.getElementById('aiStatusText');
-            if (status === 'ok') {
-                dot.className = "w-1.5 h-1.5 bg-green-500 rounded-full transition-colors";
-                text.textContent = "AI: OK";
-            } else {
-                dot.className = "w-1.5 h-1.5 bg-yellow-500 rounded-full transition-colors";
-                text.textContent = "AI: Błąd";
+            const label = document.getElementById('aiStatusLabel');
+            if (dot && label) {
+                dot.className = ok ? "w-1.5 h-1.5 bg-green-500 rounded-full transition-colors" : "w-1.5 h-1.5 bg-yellow-500 rounded-full transition-colors";
+                label.textContent = ok ? "AI: OK" : "AI: FALLBACK";
             }
         }
 
-        function showConfirm(msg, onConfirm) {
-            const modal = document.getElementById('confirmModal');
-            document.getElementById('confirmMessage').textContent = msg;
-            confirmCallback = () => { onConfirm(); closeConfirm(); };
-            document.getElementById('confirmActionBtn').onclick = confirmCallback;
-            modal.classList.add('modal-active');
+        function setUIProcessing(proc) {
+            const b = document.getElementById('micBtn');
+            const l = document.getElementById('micLabel');
+            if (proc) { b?.classList.add('pulse-ai'); if (l) { l.textContent = "Analiza..."; l.style.opacity = '1'; } }
+            else { b?.classList.remove('pulse-ai'); if (l) { l.textContent = "Słucham..."; l.style.opacity = '0'; } }
         }
-        function closeConfirm() { document.getElementById('confirmModal').classList.remove('modal-active'); confirmCallback = null; }
 
+        function showToast(m, i, c) {
+            const t = document.getElementById('toast');
+            const text = document.getElementById('toastText');
+            const icon = document.getElementById('toastIcon');
+            if (!t || !text || !icon) return;
+            text.textContent = m;
+            icon.setAttribute('data-lucide', i);
+            icon.className = `w-4 h-4 ${c}`;
+            lucide.createIcons();
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 2500);
+        }
+
+        // --- MOTYW I GEOLOKACJA ---
         async function fetchSunriseSunset(lat, lng) {
             try {
                 const res = await fetch(`https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`);
@@ -332,6 +294,17 @@
                 if (data.status === "OK") return { sunrise: new Date(data.results.sunrise), sunset: new Date(data.results.sunset) };
             } catch (e) {}
             return null;
+        }
+
+        async function geocodeAddress(addr) {
+            const search = addr.split('/')[0].trim();
+            let q = encodeURIComponent(search);
+            if (config.city) q += encodeURIComponent(`, ${config.city}`);
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`);
+                const data = await res.json();
+                return data?.[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
+            } catch(e) { return null; }
         }
 
         async function refreshTheme() {
@@ -358,96 +331,44 @@
             lucide.createIcons();
         }
 
-        function cycleThemeManual() {
-            const modes = ['light', 'dark', 'auto'];
-            config.theme = modes[(modes.indexOf(config.theme) + 1) % 3];
-            document.getElementById('setTheme').value = config.theme;
-            applySettings();
-        }
-
-        // --- GEMMA-3 AI LOGIC (iPhone Ready) ---
+        // --- AI I LOGIKA GŁOSOWA ---
         async function parseWithAI(text) {
-            const finalKey = config.geminiKey || apiKeyPlaceholder;
-            if (!finalKey) { setAIStatus('error'); return null; }
+            const finalKey = config.geminiKey || apiKey;
+            if (!finalKey) { setAIStatusUI(false); return null; }
             setUIProcessing(true);
-            
             const modelName = "gemma-3-27b";
             const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
             
             const payload = {
-                contents: [{ parts: [{ text: `Tekst od kuriera: "${text}"` }] }],
-                systemInstruction: { 
-                    parts: [{ text: "Jesteś asystentem kuriera DPD. Wyodrębnij dane w formacie JSON z polami: address (ulica i numer), note (dodatkowe informacje), type (delivery lub pickup). Jeśli mowa o odbiorze lub paczce do zabrania, ustaw type na pickup. Jeśli brak notatki, pozostaw puste." }] 
-                },
-                generationConfig: { 
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            address: { type: "STRING" },
-                            note: { type: "STRING" },
-                            type: { type: "STRING", enum: ["delivery", "pickup"] }
-                        },
-                        required: ["address", "type"]
-                    }
-                }
+                contents: [{ parts: [{ text: text }] }],
+                systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON." }] },
+                generationConfig: { responseMimeType: "application/json" }
             };
 
-            const backoff = [1000, 2000, 4000, 8000];
-            for (let i = 0; i <= backoff.length; i++) {
-                try {
-                    const res = await fetch(modelUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        setUIProcessing(false);
-                        setAIStatus('ok');
-                        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        return resultText ? JSON.parse(resultText) : null;
-                    }
-
-                    if ((res.status === 429 || res.status >= 500) && i < backoff.length) {
-                        await new Promise(r => setTimeout(r, backoff[i]));
-                        continue;
-                    }
-                    throw new Error(`API error: ${res.status}`);
-                } catch (e) {
-                    if (i === backoff.length) {
-                        setUIProcessing(false);
-                        setAIStatus('error');
-                        return null; 
-                    }
-                }
+            try {
+                const res = await fetch(modelUrl, { method: 'POST', body: JSON.stringify(payload) });
+                if (!res.ok) throw "error";
+                const data = await res.json();
+                setAIStatusUI(true);
+                return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
+            } catch (e) {
+                setAIStatusUI(false);
+                return null;
+            } finally {
+                setUIProcessing(false);
             }
-            setUIProcessing(false);
-            return null;
-        }
-
-        function setUIProcessing(proc) {
-            isProcessingAI = proc;
-            const b = document.getElementById('micBtn');
-            const l = document.getElementById('micLabel');
-            if (proc) { b?.classList.add('pulse-ai'); if (l) { l.textContent = "Analiza Gemma-3..."; l.style.opacity = '1'; } }
-            else { b?.classList.remove('pulse-ai'); if (l) l.style.opacity = '0'; }
         }
 
         async function handleVoiceResult(text) {
             if (!text || text.trim().length < 2) return;
-            
             let aiData = await parseWithAI(text);
-            
             if (aiData && aiData.address) {
-                addEntry(aiData.address, aiData.note || "", aiData.type || 'delivery');
+                addEntry(aiData.address, aiData.note, aiData.type);
             } else {
-                // Manual Fallback Logic
-                let low = text.toLowerCase();
+                const low = text.toLowerCase();
                 const kw = (config.stopWord || "notatka").toLowerCase();
                 const split = low.indexOf(kw);
-                let addr = text, note = "", type = low.includes('odbiór') || low.includes('odebrać') ? 'pickup' : 'delivery';
+                let addr = text, note = "", type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
                 if (split !== -1) {
                     addr = text.substring(0, split).trim();
                     note = text.substring(split + kw.length).trim();
@@ -459,115 +380,136 @@
         function formatPolishNumbers(text) {
             let t = text.toLowerCase().trim();
             const numMap = { 'zero': '0', 'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5', 'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10' };
-            Object.keys(numMap).forEach(w => { t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]); });
-            t = t.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
-            return t;
+            Object.keys(numMap).forEach(w => t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), numMap[w]));
+            return t.replace(/(\d+)\s*(przez|na|łamane)\s*(\d+)/g, '$1/$3');
         }
 
-        async function geocodeAddress(addr) {
-            const searchAddr = addr.split('/')[0].trim();
-            let query = encodeURIComponent(searchAddr);
-            if (config.city) query += encodeURIComponent(`, ${config.city}`);
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`;
-            if (cachedGps) url += `&lat=${cachedGps.lat}&lon=${cachedGps.lng}`;
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-            } catch (e) {}
-            return null;
-        }
-
-        async function addEntry(addr, note, type = 'delivery') {
+        // --- ZAPISYWANIE I WIDOK (iOS Optimized) ---
+        function addEntry(addr, note = "", type = 'delivery') {
             const entry = {
                 id: Date.now(),
                 time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
-                date: new Date().toLocaleDateString('pl-PL'),
+                date: getTodayStr(),
                 address: addr.trim().charAt(0).toUpperCase() + addr.trim().slice(1),
-                note: note.trim().charAt(0).toUpperCase() + note.trim().slice(1),
+                note: (note || "").trim(),
                 tip: 0, type, lat: null, lng: null
             };
-            const coords = await geocodeAddress(entry.address);
-            if (coords) { entry.lat = coords.lat; entry.lng = coords.lng; }
-            else if (cachedGps) { entry.lat = cachedGps.lat; entry.lng = cachedGps.lng; }
+
+            // Natychmiastowe dodanie do UI
             addresses.unshift(entry);
             saveAndRender();
             showToast("Dodano stop", "check", "text-green-500");
-        }
 
-        // --- SPEECH RECOGNITION ---
-        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
-        if (Recog) {
-            const recog = new Recog();
-            recog.lang = 'pl-PL'; recog.interimResults = true; recog.continuous = false;
-            recog.onstart = () => {
-                isRecording = true; lastTranscript = "";
-                document.getElementById('micBtn')?.classList.add('pulse-red');
-                document.getElementById('livePreview')?.classList.remove('hidden');
-                document.getElementById('micLabel')?.classList.add('opacity-100');
-                requestWakeLock(); prefetchGps();
-            };
-            recog.onresult = (e) => {
-                let inter = '';
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
-                    else inter += e.results[i][0].transcript;
+            // Geokodowanie w tle
+            geocodeAddress(entry.address).then(coords => {
+                if (coords) {
+                    entry.lat = coords.lat; entry.lng = coords.lng;
+                    localStorage.setItem('dpd_logs_v13', JSON.stringify(addresses));
+                    if (currentView === 'map') renderMarkers();
                 }
-                document.getElementById('liveText').textContent = inter || lastTranscript || "Słucham...";
-            };
-            recog.onend = () => {
-                isRecording = false;
-                document.getElementById('micBtn')?.classList.remove('pulse-red');
-                document.getElementById('livePreview')?.classList.add('hidden');
-                document.getElementById('micLabel')?.classList.remove('opacity-100');
-                if (lastTranscript && lastTranscript.length > 2) handleVoiceResult(lastTranscript);
-                lastTranscript = "";
-            };
-            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
+            });
         }
 
-        // --- RENDER & NAVIGATION ---
         function saveAndRender() {
             localStorage.setItem('dpd_logs_v13', JSON.stringify(addresses));
-            const today = new Date().toLocaleDateString('pl-PL');
+            const today = getTodayStr();
             const todayLogs = addresses.filter(a => a.date === today);
-            document.getElementById('deliveryCounter').textContent = todayLogs.filter(a => a.type === 'delivery').length;
-            document.getElementById('pickupCounter').textContent = todayLogs.filter(a => a.type === 'pickup').length;
-            document.getElementById('tipTotal').textContent = todayLogs.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2) + " zł";
-            document.getElementById('headerName').textContent = config.name ? `Kurier: ${config.name}` : "Kurier Log AI";
+            
+            const delEl = document.getElementById('deliveryCounter');
+            const picEl = document.getElementById('pickupCounter');
+            const tipEl = document.getElementById('tipTotal');
+            
+            if (delEl) delEl.textContent = todayLogs.filter(a => a.type === 'delivery').length;
+            if (picEl) picEl.textContent = todayLogs.filter(a => a.type === 'pickup').length;
+            if (tipEl) tipEl.textContent = todayLogs.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2) + " zł";
 
             const listEl = document.getElementById('addressList');
-            if (todayLogs.length === 0) {
-                listEl.innerHTML = ''; document.getElementById('emptyState')?.classList.remove('hidden');
-            } else {
-                document.getElementById('emptyState')?.classList.add('hidden');
-                listEl.innerHTML = todayLogs.map(item => `
-                    <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 text-left">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <span class="text-[8px] font-black uppercase opacity-60">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
-                                <p class="text-dpd-dark dark:text-gray-100 font-bold text-sm mt-1 leading-tight">${item.address}</p>
+            const emptyEl = document.getElementById('emptyState');
+            if (listEl) {
+                if (todayLogs.length === 0) {
+                    listEl.innerHTML = '';
+                    if (emptyEl) emptyEl.classList.remove('hidden');
+                } else {
+                    if (emptyEl) emptyEl.classList.add('hidden');
+                    listEl.innerHTML = todayLogs.map(item => `
+                        <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-l-zinc-500' : 'border-l-dpd-red'} border border-gray-100 dark:border-zinc-700 text-left">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <span class="text-[8px] font-black uppercase opacity-60">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
+                                    <p class="text-sm font-bold mt-1">${item.address}</p>
+                                </div>
+                                <div class="flex gap-1 shrink-0">
+                                    <button onclick="toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
+                                    <button onclick="openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteAddress(${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
                             </div>
-                            <div class="flex gap-1 shrink-0">
-                                <button onclick="toggleType(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
-                                <button onclick="openEditModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                                <button onclick="openTipModal(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 ${item.tip > 0 ? 'text-green-500' : ''}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
-                                <button onclick="deleteAddress(${item.id})" class="text-zinc-400 dark:text-zinc-500 p-1 hover:text-dpd-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                        </div>
-                        ${item.note ? `<div class="mt-2 text-[11px] text-gray-500 italic border-t border-gray-50 dark:border-zinc-700 pt-1">${item.note}</div>` : ''}
-                    </li>`).join('');
+                            ${item.note ? `<p class="mt-2 text-[10px] opacity-60 italic border-t border-gray-50 dark:border-zinc-700 pt-1">${item.note}</p>` : ''}
+                        </li>
+                    `).join('');
+                }
             }
             lucide.createIcons();
-            if (map && currentView === 'map') renderMarkers();
         }
+
+        // --- MAPA ---
+        function initMap() { 
+            if (!map) { 
+                map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13); 
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+                markersGroup = L.layerGroup().addTo(map); 
+            } 
+        }
+
+        function renderMarkers() {
+            if (!markersGroup) return; markersGroup.clearLayers();
+            const today = getTodayStr();
+            const pts = addresses.filter(a => a.date === today && a.lat);
+            if (!pts.length) return;
+            const bounds = L.latLngBounds();
+            pts.forEach(p => {
+                const icon = L.divIcon({ html: `<i data-lucide="map-pin" class="w-8 h-8 text-dpd-red"></i>`, className: 'custom-icon', iconSize: [32, 32], iconAnchor: [16, 32] });
+                L.marker([p.lat, p.lng], { icon }).bindPopup(p.address).addTo(markersGroup);
+                bounds.extend([p.lat, p.lng]);
+            });
+            map.fitBounds(bounds, { padding: [50, 50] }); lucide.createIcons();
+        }
+
+        // --- NAWIGACJA I WIDOKI ---
+        function toggleView(v) {
+            const vs = { list: 'listView', map: 'mapView', settings: 'settingsView' };
+            Object.values(vs).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('view-hidden');
+            });
+            const target = document.getElementById(vs[v]);
+            if (target) target.classList.remove('view-hidden');
+            currentView = v;
+            const tText = document.getElementById('toggleText');
+            const tIcon = document.getElementById('toggleIcon');
+            if (v === 'map') {
+                if (tText) tText.textContent = 'Lista';
+                if (tIcon) tIcon.setAttribute('data-lucide', 'list');
+                initMap(); setTimeout(() => { if (map) map.invalidateSize(); renderMarkers(); }, 200);
+            } else {
+                if (tText) tText.textContent = 'Mapa';
+                if (tIcon) tIcon.setAttribute('data-lucide', 'map');
+            }
+            lucide.createIcons();
+        }
+
+        function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
 
         function switchSettingsTab(tab) {
             const isConfig = tab === 'config';
-            document.getElementById('tabBtnConfig').className = isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            document.getElementById('tabBtnHistory').className = !isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
-            document.getElementById('tabContentConfig').classList.toggle('active', isConfig);
-            document.getElementById('tabContentHistory').classList.toggle('active', !isConfig);
+            const btnC = document.getElementById('tabBtnConfig');
+            const btnH = document.getElementById('tabBtnHistory');
+            const contC = document.getElementById('tabContentConfig');
+            const contH = document.getElementById('tabContentHistory');
+            if (btnC) btnC.className = isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
+            if (btnH) btnH.className = !isConfig ? 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red' : 'flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all text-gray-400';
+            if (contC) contC.classList.toggle('active', isConfig);
+            if (contH) contH.classList.toggle('active', !isConfig);
             if (!isConfig) renderGroupedHistory();
             lucide.createIcons();
         }
@@ -588,129 +530,105 @@
                 const day = grouped[k];
                 const tips = day.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
                 return `
-                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4 text-left text-left">
-                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
+                    <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20">
                         <div class="text-left">
-                            <p class="text-[11px] font-black uppercase text-dpd-red leading-none text-left">${day.date}</p>
-                            <p class="text-[8px] font-bold opacity-40 uppercase mt-1 text-left">Napiwki: ${tips} zł</p>
+                            <p class="text-[11px] font-black uppercase text-dpd-red leading-none">${day.date}</p>
+                            <p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p>
                         </div>
-                        <div class="flex gap-1 text-left">
-                            <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400 text-left"><i data-lucide="download" class="w-4 h-4 text-left text-left"></i></button>
-                            <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left text-left"></i></button>
+                        <div class="flex gap-1">
+                            <button onclick="exportSpecificDay('${day.date}')" class="p-2 text-gray-400"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            <button onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                         </div>
                     </div>
-                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left text-left">
-                        ${day.stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80 text-left">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'} text-left text-left">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
+                    <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
+                        ${day.stops.map(s => `<div class="flex justify-between text-[10px]"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        function exportSpecificDay(date) {
-            const data = addresses.filter(a => a.date === date); if (!data.length) return;
-            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + data.map(r => `${r.date};${r.time};${r.type};"${r.address}";"${r.note}";${r.tip};${r.lat || ''};${r.lng || ''}`).join("\n");
-            const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(b); link.download = `Raport_${date.replace(/\./g, '_')}.csv`; link.click();
+        // --- SPEECH ---
+        const Recog = window.webkitSpeechRecognition || window.SpeechRecognition;
+        if (Recog) {
+            const recog = new Recog();
+            recog.lang = 'pl-PL'; recog.interimResults = true;
+            recog.onstart = () => {
+                isRecording = true; lastTranscript = "";
+                document.getElementById('micBtn')?.classList.add('pulse-red');
+                document.getElementById('livePreview')?.classList.remove('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '1';
+                requestWakeLock();
+            };
+            recog.onresult = (e) => {
+                let inter = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) lastTranscript = e.results[i][0].transcript;
+                    else inter += e.results[i][0].transcript;
+                }
+                const live = document.getElementById('liveText');
+                if (live) live.textContent = inter || lastTranscript || "Słucham...";
+            };
+            recog.onend = () => {
+                isRecording = false;
+                document.getElementById('micBtn')?.classList.remove('pulse-red');
+                document.getElementById('livePreview')?.classList.add('hidden');
+                const label = document.getElementById('micLabel');
+                if (label) label.style.opacity = '0';
+                if (lastTranscript) handleVoiceResult(lastTranscript);
+                lastTranscript = "";
+            };
+            window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
         }
 
+        // --- INNE AKCJE ---
+        function toggleType(id) { const idx = addresses.findIndex(a => a.id === id); if (idx !== -1) { addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery'; saveAndRender(); } }
+        function deleteAddress(id) { addresses = addresses.filter(a => a.id != id); saveAndRender(); }
+        function confirmReset() { const today = getTodayStr(); addresses = addresses.filter(a => a.date !== today); saveAndRender(); }
+        function confirmAllClear() { addresses = []; saveAndRender(); }
+        function openTipModal(id) { activeTipId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('tipAddress').textContent = it.address; document.getElementById('tipModal').classList.add('modal-active'); } }
+        function closeTipModal() { document.getElementById('tipModal').classList.remove('modal-active'); }
+        function confirmTip() { const val = parseFloat(document.getElementById('tipInput').value) || 0; const idx = addresses.findIndex(a => a.id === activeTipId); if (idx !== -1) { addresses[idx].tip = val; saveAndRender(); } closeTipModal(); }
         function applySettings() {
-            config.theme = document.getElementById('setTheme').value;
+            config.geminiKey = document.getElementById('setGeminiKey').value;
             config.city = document.getElementById('setCity').value;
-            config.name = document.getElementById('setCourierName').value;
+            config.theme = document.getElementById('setTheme').value;
             config.stopWord = document.getElementById('setStopWord').value || "notatka";
             config.gpsEnabled = document.getElementById('setGpsEnabled').checked;
-            config.geminiKey = document.getElementById('setGeminiKey').value;
             localStorage.setItem('dpd_config_v12', JSON.stringify(config));
             sunTimes = null; refreshTheme(); saveAndRender();
         }
-
-        function toggleView(v) {
-            const vs = { list: 'listView', map: 'mapView', settings: 'settingsView' };
-            Object.values(vs).forEach(id => document.getElementById(id)?.classList.add('view-hidden'));
-            document.getElementById(vs[v])?.classList.remove('view-hidden');
-            currentView = v;
-            const tIcon = document.getElementById('toggleIcon'), tText = document.getElementById('toggleText');
-            if (v === 'map') {
-                tIcon?.setAttribute('data-lucide', 'list'); if (tText) tText.textContent = 'Lista';
-                initMap(); setTimeout(() => { map?.invalidateSize(); renderMarkers(); }, 200);
-            } else {
-                tIcon?.setAttribute('data-lucide', 'map'); if (tText) tText.textContent = 'Mapa';
-            }
-            lucide.createIcons();
+        function exportToCSV() {
+            const today = getTodayStr();
+            const data = addresses.filter(a => a.date === today); if (!data.length) return;
+            let csv = "\uFEFFData;Godzina;Typ;Adres;Notatka;Napiwek;Szerokość;Długość\n" + data.map(r => `${r.date};${r.time};${r.type};"${r.address}";"${r.note}";${r.tip};${r.lat || ''};${r.lng || ''}`).join("\n");
+            const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(b); link.download = `Raport_${today.replace(/\./g, '_')}.csv`; link.click();
         }
-        function handleMapToggle() { currentView === 'map' ? toggleView('list') : toggleView('map'); }
+        async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); const d = document.getElementById('wakeDot'); if (d) d.className = "w-1.5 h-1.5 bg-green-500 rounded-full"; } catch(e){} } }
 
-        // --- LEAFLET MAP & CLUSTERING ---
-        function initMap() { 
-            if (!map) { 
-                map = L.map('map', { zoomControl: false }).setView([52.23, 21.01], 13); 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
-                markersGroup = L.layerGroup().addTo(map); 
-            } 
-        }
-        function renderMarkers() {
-            if (!markersGroup) return; 
-            markersGroup.clearLayers(); 
-            const today = new Date().toLocaleDateString('pl-PL'); 
-            const pts = addresses.filter(a => a.date === today && a.lat);
-            if (!pts.length) return; 
-            const grouped = pts.reduce((acc, p) => {
-                const key = `${p.lat.toFixed(5)}_${p.lng.toFixed(5)}`;
-                if (!acc[key]) acc[key] = []; acc[key].push(p); return acc;
-            }, {});
-            const bounds = L.latLngBounds();
-            Object.entries(grouped).forEach(([key, items]) => {
-                const [lat, lng] = key.split('_').map(Number);
-                const count = items.length;
-                const icon = L.divIcon({
-                    html: `<div class="relative"><i data-lucide="map-pin" class="w-8 h-8 text-dpd-red drop-shadow-md text-left text-left"></i>${count > 1 ? `<div class="absolute -top-1 -right-1 marker-cluster-custom w-5 h-5 text-center text-left text-left">${count}</div>` : ''}</div>`,
-                    className: 'custom-div-icon', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
-                });
-                const popup = `<div class="p-3 text-left"><p class="text-[10px] font-black uppercase text-dpd-red mb-2 border-b pb-1 text-left">Punkty (${count})</p><ul class="space-y-2 max-h-48 overflow-y-auto text-left text-left">${items.map(it => `<li class="text-[11px] text-left text-left"><b>${it.time}</b> ${it.address}</li>`).join('')}</ul></div>`;
-                L.marker([lat, lng], { icon }).bindPopup(popup).addTo(markersGroup);
-                bounds.extend([lat, lng]);
-            });
-            map.fitBounds(bounds, { padding: [50, 50] }); lucide.createIcons();
-        }
+        // --- INICJALIZACJA (Fix ReferenceError) ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const dateEl = document.getElementById('currentDate');
+            const keyEl = document.getElementById('setGeminiKey');
+            const cityEl = document.getElementById('setCity');
+            const themeEl = document.getElementById('setTheme');
+            const stopEl = document.getElementById('setStopWord');
+            const gpsEl = document.getElementById('setGpsEnabled');
 
-        // --- ACTIONS & MODALS ---
-        function deleteAddress(id) { showConfirm("Usunąć ten stop?", () => { addresses = addresses.filter(a => a.id != id); saveAndRender(); }); }
-        function confirmReset() { showConfirm("Wyczyścić dzisiejsze stopy?", () => { const today = new Date().toLocaleDateString('pl-PL'); addresses = addresses.filter(a => a.date !== today); saveAndRender(); }); }
-        function confirmAllClear() { showConfirm("Usunąć całą historię?", () => { addresses = []; saveAndRender(); }); }
-        function toggleType(id) { const idx = addresses.findIndex(a => a.id === id); if (idx !== -1) { addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery'; saveAndRender(); } }
-        function openEditModal(id) { activeEditId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('editAddressInput').value = it.address; document.getElementById('editNoteInput').value = it.note; document.getElementById('editModal').classList.add('modal-active'); } }
-        function confirmEdit() { const idx = addresses.findIndex(a => a.id === activeEditId); if (idx !== -1) { addresses[idx].address = document.getElementById('editAddressInput').value; addresses[idx].note = document.getElementById('editNoteInput').value; saveAndRender(); } closeEditModal(); }
-        function closeEditModal() { document.getElementById('editModal').classList.remove('modal-active'); }
-        function openTipModal(id) { activeTipId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('tipAddress').textContent = it.address; document.getElementById('tipInput').value = it.tip || ""; document.getElementById('tipModal').classList.add('modal-active'); } }
-        function confirmTip() { const val = parseFloat(document.getElementById('tipInput').value) || 0; const idx = addresses.findIndex(a => a.id === activeTipId); if (idx !== -1) { addresses[idx].tip = val; saveAndRender(); } closeTipModal(); }
-        function closeTipModal() { document.getElementById('tipModal').classList.remove('modal-active'); }
+            if (dateEl) dateEl.textContent = getTodayStr();
+            if (keyEl) keyEl.value = config.geminiKey || "";
+            if (cityEl) cityEl.value = config.city || "";
+            if (themeEl) themeEl.value = config.theme || "auto";
+            if (stopEl) stopEl.value = config.stopWord || "notatka";
+            if (gpsEl) gpsEl.checked = config.gpsEnabled !== false;
 
-        function showToast(m, i, c) {
-            const t = document.getElementById('toast');
-            document.getElementById('toastText').textContent = m;
-            const icon = document.getElementById('toastIcon');
-            icon.setAttribute('data-lucide', i);
-            icon.className = `w-4 h-4 ${c}`;
-            lucide.createIcons(); t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000);
-        }
-        function prefetchGps() { if (navigator.geolocation && config.gpsEnabled) navigator.geolocation.getCurrentPosition(p => cachedGps = { lat: p.coords.latitude, lng: p.coords.longitude }, null, { enableHighAccuracy: true }); }
-        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); const d = document.getElementById('wakeDot'); if (d) d.className = "w-1.5 h-1.5 bg-green-500 rounded-full"; document.getElementById('wakeText').textContent = "Blokada: WŁ"; } } catch(e){} }
-        function exportToCSV() { const today = new Date().toLocaleDateString('pl-PL'); exportSpecificDay(today); }
-
-        // --- INIT ---
-        document.getElementById('setCity').value = config.city || "";
-        document.getElementById('setTheme').value = config.theme || "auto";
-        document.getElementById('setCourierName').value = config.name || "";
-        document.getElementById('setStopWord').value = config.stopWord || "notatka";
-        document.getElementById('setGpsEnabled').checked = config.gpsEnabled !== false;
-        document.getElementById('setGeminiKey').value = config.geminiKey || "";
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pl-PL');
-        
-        refreshTheme(); 
-        saveAndRender();
-        setInterval(refreshTheme, 60000);
-        document.body.addEventListener('click', () => { if (!wakeLock) requestWakeLock(); }, { once: true });
+            refreshTheme(); 
+            saveAndRender();
+            setInterval(refreshTheme, 60000);
+        });
     </script>
 </body>
 </html>
