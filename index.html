@@ -82,12 +82,10 @@
                 </div>
                 <div class="flex flex-col items-end gap-2 text-right">
                     <div class="flex items-center gap-1.5 justify-end">
-                        <!-- Status AI -->
                         <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
                             <span id="aiStatusLabel">AI: OK</span>
                         </div>
-                        <!-- Blokada ekranu -->
                         <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[8px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
                             <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
                         </div>
@@ -107,7 +105,6 @@
                 </div>
             </div>
             
-            <!-- Trzy osobne karty liczników -->
             <div class="mt-4 grid grid-cols-3 gap-2">
                 <div class="glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
                     <span class="text-[8px] font-black uppercase opacity-80 tracking-tighter mb-0.5">Doręczenia</span>
@@ -126,7 +123,6 @@
     </header>
 
     <main class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-zinc-900 text-left">
-        <!-- Widok Listy -->
         <div id="listView" class="absolute inset-0 p-4 overflow-y-auto z-1">
             <div id="livePreview" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-xl text-sm italic text-gray-600 dark:text-yellow-200 hidden min-h-[40px] flex items-center gap-2 shadow-sm">
                 <span class="relative flex h-2 w-2">
@@ -142,20 +138,17 @@
             <ul id="addressList" class="space-y-3 pb-64 text-left"></ul>
         </div>
 
-        <!-- Widok Mapy -->
         <div id="mapView" class="absolute inset-0 z-0 view-hidden">
             <div id="map"></div>
         </div>
 
-        <!-- Widok Ustawień -->
         <div id="settingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
             <div class="header-safe-area flex-none"></div>
-            <div class="p-4 flex-none">
+            <div class="p-4 flex-none text-left">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-black uppercase tracking-tight">Ustawienia</h2>
                     <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
-                <!-- Zakładki w ustawieniach -->
                 <div class="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-2xl mb-4 overflow-x-auto no-scrollbar">
                     <button onclick="window.switchSettingsTab('config')" id="tabBtnConfig" class="flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all bg-white dark:bg-zinc-800 shadow-sm text-dpd-red">Konfiguracja</button>
                     <button onclick="window.switchSettingsTab('history')" id="tabBtnHistory" class="flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400">Historia dni</button>
@@ -164,7 +157,6 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left">
-                <!-- Tab: Konfiguracja -->
                 <div id="tabContentConfig" class="tab-content active space-y-6">
                     <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
                         <div class="flex flex-col text-left">
@@ -178,7 +170,7 @@
                         <input type="password" id="setGeminiKey" oninput="window.applySettings()" placeholder="Wklej klucz API..." class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400 text-left">Motyw Aplikacji</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-zinc-600 dark:text-zinc-400 text-left text-left text-left">Motyw Aplikacji</label>
                         <select id="setTheme" onchange="window.applySettings()" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 mt-1 cursor-pointer">
                             <option value="light">Jasny</option>
                             <option value="dark">Ciemny</option>
@@ -186,7 +178,7 @@
                         </select>
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left">Miasto Główne</label>
+                        <label class="text-[10px] font-bold text-gray-500 block mb-1 uppercase text-left text-left">Miasto Główne</label>
                         <div class="flex items-center gap-2">
                             <input type="text" id="setCity" oninput="window.applySettings()" placeholder="Np. Wrocław" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
                             <button onclick="window.updateCityFromGps()" class="p-2 bg-gray-200 dark:bg-zinc-700 rounded-full active:scale-90"><i data-lucide="map-pin" class="w-4 h-4 text-dpd-red"></i></button>
@@ -200,41 +192,72 @@
                         <span class="text-sm font-bold">Używaj GPS</span>
                         <input type="checkbox" id="setGpsEnabled" onchange="window.applySettings()" class="w-5 h-5 accent-dpd-red">
                     </label>
-                    <button onclick="window.confirmAllClear()" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
+                    <button onclick="window.handleConfirmAction('clear_all')" class="w-full bg-red-50 dark:bg-red-950/20 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] border border-red-100 dark:border-red-900/30">Wyczyść całą bazę danych</button>
                 </div>
-                <!-- Tab: Historia -->
                 <div id="tabContentHistory" class="tab-content space-y-4">
                     <div id="historyList" class="space-y-4"></div>
                 </div>
-                <!-- Tab: Dokumentacja -->
                 <div id="tabContentDoc" class="tab-content space-y-4">
                     <div class="bg-gray-50 dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <h3 class="text-xs font-black uppercase text-dpd-red mb-3">Strażnik Funkcji v1.0</h3>
-                        <ul class="space-y-3 text-[10px] font-bold text-gray-500 dark:text-zinc-400">
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Nagłówek:</b> Trzy osobne karty (Doręczenia, Odbiór, Napiwki). Brak daty u góry.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>AI Engine:</b> Model gemma-3-27b z przełącznikiem Włącz/Wyłącz w ustawieniach.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Lokalizacja:</b> Auto-pobieranie miasta z GPS + geokodowanie stopów w tle.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Mapa:</b> Leaflet z klastrowaniem punktów i dynamicznym fitBounds.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>iPhone Fix:</b> Wszystkie funkcje w zasięgu window. Globalna obsługa zdarzeń.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Motyw:</b> Jasny / Ciemny / Auto (Wschód-Zachód). Etykieta Auto pod ikoną.</span></li>
-                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Stabilność:</b> Natychmiastowe dodawanie stopu do listy przed geokodowaniem.</span></li>
+                        <h3 class="text-xs font-black uppercase text-dpd-red mb-3">Strażnik Funkcji v1.1</h3>
+                        <ul class="space-y-3 text-[10px] font-bold text-gray-500 dark:text-zinc-400 text-left">
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Nagłówek:</b> Trzy osobne karty liczników. Brak daty u góry.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>AI Engine:</b> Model gemma-3-27b z przełącznikiem i poprawionym API requestem.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Edycja:</b> Przywrócona funkcja edycji adresu i notatki dla każdego stopu.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Bezpieczeństwo:</b> Autorski system modali potwierdzeń (Delete/Reset/Clear).</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Lokalizacja:</b> Auto-miasto z GPS + geokodowanie w tle.</span></li>
+                            <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3 h-3 text-green-500 mt-0.5 shrink-0"></i> <span><b>Motyw:</b> Jasny/Ciemny/Auto z etykietą statusu.</span></li>
                         </ul>
-                        <p class="mt-4 text-[8px] opacity-40 uppercase font-black text-center">Zakaz usuwania powyższych bez polecenia</p>
+                        <p class="mt-4 text-[8px] opacity-40 uppercase font-black text-center text-left">Nie usuwać funkcji bez polecenia</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modale -->
-    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-left">
-            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red text-left">Napiwek</h3>
-            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate text-left"></p>
+    <!-- Modale Potwierdzeń -->
+    <div id="confirmModal" class="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform text-center">
+            <i data-lucide="alert-triangle" class="w-12 h-12 text-dpd-red mx-auto mb-4"></i>
+            <h3 class="text-lg font-black uppercase mb-2">Jesteś pewien?</h3>
+            <p id="confirmModalText" class="text-xs text-gray-500 dark:text-gray-400 mb-6 font-medium">Tej operacji nie można cofnąć.</p>
+            <div class="flex gap-3">
+                <button onclick="window.closeConfirmModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-4 rounded-2xl font-black uppercase text-[10px]">Anuluj</button>
+                <button id="confirmBtnAction" class="flex-1 bg-dpd-red text-white py-4 rounded-2xl font-black uppercase text-[10px]">Tak, potwierdzam</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edycji -->
+    <div id="editModal" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <h3 class="text-lg font-black uppercase mb-4 text-dpd-red">Edytuj Stop</h3>
+            <div class="space-y-4 text-left">
+                <div class="bg-gray-50 dark:bg-zinc-800 p-4 rounded-2xl">
+                    <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Adres</label>
+                    <input type="text" id="editAddrInput" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                </div>
+                <div class="bg-gray-50 dark:bg-zinc-800 p-4 rounded-2xl">
+                    <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Notatka</label>
+                    <textarea id="editNoteInput" rows="3" class="w-full bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="window.closeEditModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-4 rounded-2xl font-black uppercase text-[10px]">Anuluj</button>
+                <button onclick="window.saveEdit()" class="flex-1 bg-dpd-red text-white py-4 rounded-2xl font-black uppercase text-[10px]">Zapisz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Napiwek Modal -->
+    <div id="tipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity text-left text-left">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-95 transition-transform">
+            <h3 class="text-lg font-black uppercase mb-1 text-dpd-red">Napiwek</h3>
+            <p id="tipAddress" class="text-[10px] text-gray-400 mb-4 font-bold uppercase truncate"></p>
             <input type="number" id="tipInput" placeholder="0.00" step="0.50" inputmode="decimal" class="w-full bg-gray-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-2xl font-black mb-4 focus:ring-2 focus:ring-dpd-red outline-none">
             <div class="flex gap-3">
-                <button onclick="window.closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-3 rounded-xl font-black uppercase text-[10px] text-center">Anuluj</button>
-                <button onclick="window.confirmTip()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-[10px] text-center">Zapisz</button>
+                <button onclick="window.closeTipModal()" class="flex-1 bg-gray-100 dark:bg-zinc-800 py-4 rounded-2xl font-black uppercase text-[10px]">Anuluj</button>
+                <button onclick="window.confirmTip()" class="flex-1 bg-dpd-red text-white py-4 rounded-2xl font-black uppercase text-[10px]">Zapisz</button>
             </div>
         </div>
     </div>
@@ -244,34 +267,30 @@
         <div class="h-12 bg-gradient-to-t from-gray-100 dark:from-black to-transparent"></div>
         <div class="bg-gray-100 dark:bg-black safe-bottom px-6 pb-6">
             <div class="max-w-md mx-auto flex justify-around items-center bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 relative">
-                <button onclick="window.confirmReset()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
+                <button onclick="window.handleConfirmAction('reset_day')" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-red">
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
                     <span class="text-[10px] font-bold uppercase">Reset</span>
                 </button>
                 <div class="relative -top-10 text-center">
                     <button id="micBtn" onclick="window.toggleRecognition()" class="bg-dpd-red text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-zinc-900">
-                        <i data-lucide="mic" id="micIcon" class="w-10 h-10 text-center"></i>
+                        <i data-lucide="mic" id="micIcon" class="w-10 h-10 text-center text-center"></i>
                     </button>
                     <div id="micLabel" class="text-[10px] font-bold text-dpd-red mt-1 opacity-0 transition-opacity uppercase font-black text-center">Słucham...</div>
                 </div>
-                <button onclick="window.exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark">
-                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">Raport</span>
+                <button onclick="window.exportToCSV()" class="flex flex-col items-center gap-1 p-2 text-gray-300 dark:text-zinc-600 active:text-dpd-dark text-left">
+                    <i data-lucide="file-spreadsheet" class="w-6 h-6 text-left"></i>
+                    <span class="text-[10px] font-bold uppercase text-left">Raport</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-dpd-dark text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl opacity-0 transition-all pointer-events-none z-[60] flex items-center gap-2">
-        <i id="toastIcon" data-lucide="info" class="w-4 h-4"></i><span id="toastText"></span>
+        <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-left"></i><span id="toastText"></span>
     </div>
 
     <script>
-        // API KEY INJECTED AT RUNTIME
-        const apiKey = ""; 
-
-        // STATE MANAGEMENT
+        const apiKeyDefault = ""; 
         let addresses = [];
         try { addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]'); } catch(e) { addresses = []; }
         
@@ -281,15 +300,60 @@
 
         let isRecording = false, isProcessingAI = false, lastTranscript = "", interimTranscript = "";
         let wakeLock = null, currentView = 'list', map = null, markersGroup = null, cachedGps = null;
-        let activeTipId = null, sunTimes = null;
+        let activeTipId = null, activeEditId = null, sunTimes = null;
 
-        // DATE UTILS
         function getTodayStr() {
             const d = new Date();
             return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
         }
 
-        // GLOBAL UI HANDLERS (EXPLICIT WINDOW ASSIGNMENT FOR IPHONE)
+        // POTWIERDZENIA (CUSTOM MODALS)
+        window.handleConfirmAction = function(type, id = null) {
+            const modal = document.getElementById('confirmModal');
+            const text = document.getElementById('confirmModalText');
+            const btn = document.getElementById('confirmBtnAction');
+            
+            if (type === 'delete_stop') {
+                text.textContent = "Czy na pewno chcesz usunąć ten adres?";
+                btn.onclick = () => { window.deleteAddress(id); window.closeConfirmModal(); };
+            } else if (type === 'reset_day') {
+                text.textContent = "Czy na pewno chcesz wyczyścić wszystkie dzisiejsze stopy?";
+                btn.onclick = () => { window.confirmReset(); window.closeConfirmModal(); };
+            } else if (type === 'clear_all') {
+                text.textContent = "UWAGA! To spowoduje usunięcie CAŁEJ historii. Czy kontynuować?";
+                btn.onclick = () => { window.confirmAllClear(); window.closeConfirmModal(); };
+            }
+            
+            modal.classList.add('modal-active');
+        };
+
+        window.closeConfirmModal = () => document.getElementById('confirmModal').classList.remove('modal-active');
+
+        // EDYCJA
+        window.openEditModal = function(id) {
+            activeEditId = id;
+            const item = addresses.find(a => a.id === id);
+            if (item) {
+                document.getElementById('editAddrInput').value = item.address;
+                document.getElementById('editNoteInput').value = item.note || "";
+                document.getElementById('editModal').classList.add('modal-active');
+            }
+        };
+
+        window.closeEditModal = () => document.getElementById('editModal').classList.remove('modal-active');
+
+        window.saveEdit = function() {
+            const idx = addresses.findIndex(a => a.id === activeEditId);
+            if (idx !== -1) {
+                addresses[idx].address = document.getElementById('editAddrInput').value;
+                addresses[idx].note = document.getElementById('editNoteInput').value;
+                window.saveAndRender();
+                window.showToast("Zaktualizowano", "pencil", "text-blue-500");
+            }
+            window.closeEditModal();
+        };
+
+        // UI UTILS
         window.setAIStatusUI = function() {
             const dot = document.getElementById('aiDot');
             const label = document.getElementById('aiStatusLabel');
@@ -329,7 +393,6 @@
             setTimeout(() => t.style.opacity = '0', 2500);
         };
 
-        // GPS & LOCATION
         window.updateCityFromGps = function() {
             if (!navigator.geolocation) return;
             window.showToast("Pobieram miasto...", "map-pin", "text-blue-500");
@@ -345,7 +408,7 @@
                         window.showToast(`Ustawiono: ${city}`, "check", "text-green-500");
                         sunTimes = null; window.refreshTheme();
                     }
-                } catch(e) { window.showToast("Błąd pobierania miasta", "x", "text-red-500"); }
+                } catch(e) { window.showToast("Błąd GPS", "x", "text-red-500"); }
             }, () => window.showToast("Błąd GPS", "x", "text-red-500"));
         };
 
@@ -361,7 +424,6 @@
             } catch(e) { return null; }
         };
 
-        // THEME MANAGEMENT
         window.refreshTheme = async function() {
             let target = config.theme;
             if (config.theme === 'auto') {
@@ -392,7 +454,7 @@
             window.applySettings();
         };
 
-        // AI & VOICE HANDLING
+        // AI GŁOSOWE (FIXED GEMMA-3)
         window.handleVoiceResult = async function(text) {
             if (!text || text.trim().length < 2) return;
             let aiData = null;
@@ -400,16 +462,24 @@
                 window.setUIProcessing(true);
                 try {
                     const modelName = "gemma-3-27b";
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.geminiKey || apiKey}`, {
-                        method: 'POST', body: JSON.stringify({
-                            contents: [{ parts: [{ text: text }] }],
-                            systemInstruction: { parts: [{ text: "Jesteś asystentem kuriera DPD. Wyodrębnij: address, note, type (delivery/pickup) do formatu JSON. Jeśli mowa o odbiorze lub paczce do zabrania, ustaw type na pickup." }] },
-                            generationConfig: { responseMimeType: "application/json" }
+                    const finalKey = config.geminiKey || apiKeyDefault;
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`, {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: `Tekst do analizy: "${text}"` }] }],
+                            systemInstruction: { 
+                                parts: [{ text: "Jesteś asystentem kuriera DPD. Wyodrębnij dane do JSON z polami: address (ulica i numer), note (dodatkowe informacje), type ('delivery' lub 'pickup'). Jeśli brak notatki, pozostaw puste." }] 
+                            },
+                            generationConfig: { 
+                                responseMimeType: "application/json" 
+                            }
                         })
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        aiData = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
+                        const resultString = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        aiData = JSON.parse(resultString || "{}");
                     }
                 } catch (e) { aiData = null; }
                 window.setUIProcessing(false);
@@ -467,7 +537,7 @@
             window.toggleRecognition = () => { if (!isProcessingAI) isRecording ? recog.stop() : recog.start(); };
         }
 
-        // DATA ADD & RENDER
+        // ZAPIS I RENDER
         window.addEntry = function(addr, note = "", type = 'delivery') {
             if (!addr || addr.trim().length < 2) return;
             const entry = {
@@ -515,12 +585,13 @@
                                     <p class="text-sm font-bold mt-1">${item.address}</p>
                                 </div>
                                 <div class="flex gap-1 shrink-0">
-                                    <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4"></i></button>
-                                    <button onclick="window.openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4"></i></button>
-                                    <button onclick="window.deleteAddress(${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left text-left"></i></button>
+                                    <button onclick="window.openEditModal(${item.id})" class="p-1 opacity-40"><i data-lucide="pencil" class="w-4 h-4 text-left"></i></button>
+                                    <button onclick="window.openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4 text-left"></i></button>
+                                    <button onclick="window.handleConfirmAction('delete_stop', ${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4 text-left"></i></button>
                                 </div>
                             </div>
-                            ${item.note ? `<p class="mt-2 text-[10px] opacity-60 italic border-t border-gray-50 dark:border-zinc-700 pt-1">${item.note}</p>` : ''}
+                            ${item.note ? `<p class="mt-2 text-[10px] opacity-60 italic border-t border-gray-50 dark:border-zinc-700 pt-1 text-left">${item.note}</p>` : ''}
                         </li>
                     `).join('');
                 }
@@ -529,7 +600,7 @@
             window.setAIStatusUI();
         };
 
-        // VIEW & NAVIGATION
+        // NAVIGATION
         window.toggleView = function(v) {
             ['listView', 'mapView', 'settingsView'].forEach(id => document.getElementById(id).classList.add('view-hidden'));
             document.getElementById(v + 'View').classList.remove('view-hidden');
@@ -559,7 +630,7 @@
             if (!pts.length) return;
             const bounds = L.latLngBounds();
             pts.forEach(p => {
-                const icon = L.divIcon({ html: `<i data-lucide="map-pin" class="w-8 h-8 text-dpd-red"></i>`, className: 'custom-icon', iconSize: [32, 32], iconAnchor: [16, 32] });
+                const icon = L.divIcon({ html: `<i data-lucide="map-pin" class="w-8 h-8 text-dpd-red text-left"></i>`, className: 'custom-icon', iconSize: [32, 32], iconAnchor: [16, 32] });
                 L.marker([p.lat, p.lng], { icon }).bindPopup(p.address).addTo(markersGroup);
                 bounds.extend([p.lat, p.lng]);
             });
@@ -574,7 +645,7 @@
             const contentHistory = document.getElementById('tabContentHistory');
             const contentDoc = document.getElementById('tabContentDoc');
 
-            [btnConfig, btnHistory, btnDoc].forEach(b => b.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400');
+            [btnConfig, btnHistory, btnDoc].forEach(b => b.className = 'flex-1 min-w-[80px] py-2.5 rounded-xl text-[9px] font-black uppercase transition-all text-gray-400 text-left');
             [contentConfig, contentHistory, contentDoc].forEach(c => c.classList.remove('active'));
 
             if (tab === 'config') {
@@ -604,20 +675,20 @@
             list.innerHTML = sorted.map(k => {
                 const d = grouped[k];
                 const tips = d.stops.reduce((s, c) => s + (parseFloat(c.tip) || 0), 0).toFixed(2);
-                return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4">
+                return `<div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-4 text-left text-left">
                     <div class="p-4 flex justify-between items-center bg-white/50 dark:bg-black/20 text-left">
-                        <div class="text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none">${d.date}</p><p class="text-[8px] font-bold opacity-40 uppercase mt-1">Napiwki: ${tips} zł</p></div>
-                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        <div class="text-left text-left"><p class="text-[11px] font-black uppercase text-dpd-red leading-none text-left">${d.date}</p><p class="text-[8px] font-bold opacity-40 uppercase mt-1 text-left">Napiwki: ${tips} zł</p></div>
+                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="p-2 text-gray-400 text-left"><i data-lucide="chevron-down" class="w-4 h-4 text-left text-left text-left text-left text-left"></i></button>
                     </div>
                     <div class="hidden p-4 space-y-2 border-t border-gray-100 dark:border-zinc-800 text-left">
-                        ${d.stops.map(s => `<div class="flex justify-between text-[10px]"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'}">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
+                        ${d.stops.map(s => `<div class="flex justify-between text-[10px] text-left"><span>${s.time}</span><span class="flex-1 px-3 truncate opacity-80 text-left">${s.address}</span><span class="font-black ${s.type === 'pickup' ? 'text-zinc-400' : 'text-dpd-red'} text-left text-left text-left">${s.type === 'pickup' ? 'O' : 'D'}</span></div>`).join('')}
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         };
 
-        // SETTINGS & ACTIONS
+        // SETTINGS ACTIONS
         window.applySettings = () => {
             config.aiEnabled = document.getElementById('setAiEnabled').checked;
             config.geminiKey = document.getElementById('setGeminiKey').value;
@@ -630,9 +701,9 @@
         };
 
         window.toggleType = (id) => { const idx = addresses.findIndex(a => a.id === id); if (idx !== -1) { addresses[idx].type = addresses[idx].type === 'delivery' ? 'pickup' : 'delivery'; window.saveAndRender(); } };
-        window.deleteAddress = (id) => { addresses = addresses.filter(a => a.id != id); window.saveAndRender(); };
-        window.confirmReset = () => { const today = getTodayStr(); addresses = addresses.filter(a => a.date !== today); window.saveAndRender(); };
-        window.confirmAllClear = () => { addresses = []; window.saveAndRender(); };
+        window.deleteAddress = (id) => { addresses = addresses.filter(a => a.id != id); window.saveAndRender(); window.showToast("Usunięto stop", "trash", "text-red-500"); };
+        window.confirmReset = () => { const today = getTodayStr(); addresses = addresses.filter(a => a.date !== today); window.saveAndRender(); window.showToast("Zresetowano dzień", "trash", "text-red-500"); };
+        window.confirmAllClear = () => { addresses = []; window.saveAndRender(); window.showToast("Wyczyszczono historię", "trash", "text-red-500"); };
         window.openTipModal = (id) => { activeTipId = id; const it = addresses.find(a => a.id === id); if (it) { document.getElementById('tipAddress').textContent = it.address; document.getElementById('tipModal').classList.add('modal-active'); } };
         window.closeTipModal = () => document.getElementById('tipModal').classList.remove('modal-active');
         window.confirmTip = () => { const val = parseFloat(document.getElementById('tipInput').value) || 0; const idx = addresses.findIndex(a => a.id === activeTipId); if (idx !== -1) { addresses[idx].tip = val; window.saveAndRender(); } window.closeTipModal(); };
@@ -644,7 +715,6 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(b); link.download = `Raport_${today.replace(/\./g, '_')}.csv`; link.click();
         };
 
-        // INITIALIZATION
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('setAiEnabled').checked = config.aiEnabled !== false;
             document.getElementById('setGeminiKey').value = config.geminiKey || "";
