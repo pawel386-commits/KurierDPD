@@ -64,6 +64,13 @@ z:\WWW\stopy\
 *   **Interakcja głosowa:** Komunikat "Dodaj adres" i automatyczne uruchomienie nasłuchiwania.
 *   **Inteligentne warunki:** Ochrona przed zbędnym uruchamianiem (sprawdzanie czasu od ostatniego wpisu).
 
+### 5. Baza Klientów
+*   **Zapis danych:** Przechowywanie stałych klientów (Imię, Telefon, Notatka) powiązanych z adresem.
+*   **Automatyzacja:** Automatyczne wykrywanie klienta przy dodawaniu stopu pod znanym adresem.
+*   **UI:** Wyświetlanie danych klienta bezpośrednio na liście stopów (wyróżnienie kolorem).
+*   **Szybki kontakt:** Przycisk "Zadzwoń" przy rozpoznanym numerze telefonu.
+*   **Zarządzanie:** Dedykowany widok do edycji i przeglądania bazy klientów.
+
 ## 📦 Instalacja
 
 ### Wymagania
@@ -89,3 +96,5 @@ z:\WWW\stopy\
 *   **Smart:** Dodano moduł CarAssistant wykrywający powrót do auta (ładowanie) i ruch (GPS) w celu automatycznego wywołania zapisu.
 *   **UI:** Wydzielono zaawansowane ustawienia AI do dedykowanej podstrony.
 *   **Fix (iOS):** Naprawiono widoczność checkboxów w ustawieniach na iPhone (problem ze stylami systemowymi).
+*   **Moduł:** Dodano Bazę Klientów z automatycznym rozpoznawaniem adresów, stałymi notatkami i szybkim wybieraniem numeru.
+*   **Fix (Voice):** Naprawiono potwierdzenia głosowe (TTS) na iOS (dodano "warm-up" syntezatora) i Chrome.

@@ -2,8 +2,11 @@ const apiKeyDefault = "";
 let addresses = [];
 try { addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]'); } catch(e) { addresses = []; }
 
-let config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
-    name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true, geminiModel: "", aiProvider: "groq", wakeLockEnabled: false, carAssistantEnabled: false, voiceConfirmationEnabled: false
+let customers = [];
+try { customers = JSON.parse(localStorage.getItem('dpd_customers') || '[]'); } catch(e) { customers = []; }
+
+const config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
+    name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true, geminiModel: "", aiProvider: "groq", wakeLockEnabled: false, carAssistantEnabled: false, voiceConfirmationEnabled: false, smartAssistantEnabled: false, proximityRadius: 40
 }));
 
 // System prompt dla AI
@@ -46,6 +49,7 @@ PRZYKŁADY:
 
 let isRecording = false, isProcessingAI = false, lastTranscript = "", interimTranscript = "";
 let wakeLock = null, currentView = 'list', map = null, markersGroup = null;
+let customerMap = null, customerMarker = null;
 let activeTipId = null, activeEditId = null, sunTimes = null;
 let silenceTimeout = null; // Timeout dla automatycznego zatrzymania po braku mowy
 
@@ -157,6 +161,228 @@ window.saveEdit = function() {
         window.showToast("Zaktualizowano", "pencil", "text-blue-500");
     }
     window.closeEditModal();
+};
+
+// --- CUSTOMER DATABASE ---
+
+window.openCustomerModal = function(addressOrId) {
+    let customer = null;
+    let address = "";
+    
+    if (typeof addressOrId === 'string') {
+        // Mode: Add/Edit from Stop
+        address = addressOrId;
+        customer = customers.find(c => c.address === address);
+    } else {
+        // Mode: Edit from List
+        customer = customers.find(c => c.id === addressOrId);
+        if (customer) address = customer.address;
+    }
+
+    document.getElementById('custAddress').value = address;
+    document.getElementById('custName').value = customer ? customer.name : "";
+    document.getElementById('custPhone').value = customer ? customer.phone : "";
+    document.getElementById('custNote').value = customer ? customer.static_note : "";
+    
+    // Setup Call Button
+    const callBtn = document.getElementById('custPhoneCall');
+    if (customer && customer.phone) {
+        callBtn.href = `tel:${customer.phone}`;
+        callBtn.classList.remove('opacity-50', 'pointer-events-none');
+    } else {
+        callBtn.href = "#";
+        callBtn.classList.add('opacity-50', 'pointer-events-none');
+    }
+
+    // Setup Delete Button
+    const delBtn = document.getElementById('btnDeleteCustomer');
+    if (customer) {
+        delBtn.classList.remove('hidden');
+        delBtn.onclick = () => window.deleteCustomer(customer.id);
+    } else {
+        delBtn.classList.add('hidden');
+    }
+
+    document.getElementById('customerModal').classList.add('modal-active');
+    setTimeout(() => {
+        document.getElementById('custName').focus();
+        
+        // Initialize Map
+        if (!customerMap) {
+            customerMap = L.map('customerMap', { zoomControl: false }).setView([52.23, 21.01], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(customerMap);
+        }
+        
+        customerMap.invalidateSize();
+        
+        if (customerMarker) {
+            customerMap.removeLayer(customerMarker);
+            customerMarker = null;
+        }
+        
+        if (customer && customer.lat && customer.lng) {
+            const latLng = [customer.lat, customer.lng];
+            customerMap.setView(latLng, 16);
+            customerMarker = L.marker(latLng, { draggable: true }).addTo(customerMap);
+        } else {
+            // Default view or geocode
+            if (address && config.gpsEnabled) {
+                // Try to simple geocode or use city center
+                // For now, center on current map view or city
+                if (map) customerMap.setView(map.getCenter(), 14);
+                else customerMap.setView([52.23, 21.01], 13);
+                
+                // Try to geocode address
+                window.geocodeAddress(address).then(coords => {
+                    if (coords) {
+                        customerMap.setView([coords.lat, coords.lng], 16);
+                        if (customerMarker) customerMap.removeLayer(customerMarker);
+                        customerMarker = L.marker([coords.lat, coords.lng], { draggable: true }).addTo(customerMap);
+                    }
+                });
+            } else {
+                 if (map) customerMap.setView(map.getCenter(), 13);
+            }
+        }
+    }, 100);
+};
+
+window.closeCustomerModal = () => document.getElementById('customerModal').classList.remove('modal-active');
+
+window.saveCustomer = async function() {
+    const address = document.getElementById('custAddress').value;
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const note = document.getElementById('custNote').value.trim();
+
+    if (!name) {
+        window.showToast("Podaj nazwę klienta", "alert-circle", "text-red-500");
+        return;
+    }
+
+    const existingIdx = customers.findIndex(c => c.address === address);
+    const newCustomer = {
+        id: existingIdx !== -1 ? customers[existingIdx].id : Date.now(),
+        address: address,
+        name: name,
+        phone: phone,
+        static_note: note
+    };
+
+    // Save coordinates if marker exists
+    if (customerMarker) {
+        const pos = customerMarker.getLatLng();
+        newCustomer.lat = pos.lat;
+        newCustomer.lng = pos.lng;
+    } else if (config.gpsEnabled && address) {
+        // Try to geocode if no marker set (fallback)
+        try {
+             window.showToast("Geokodowanie...", "map-pin", "text-blue-500");
+             const coords = await window.geocodeAddress(address);
+             if (coords) {
+                 newCustomer.lat = coords.lat;
+                 newCustomer.lng = coords.lng;
+             }
+        } catch(e) {
+            console.error("Geocoding failed during save:", e);
+        }
+    }
+
+    if (existingIdx !== -1) {
+        customers[existingIdx] = newCustomer;
+        window.showToast("Zaktualizowano klienta", "user-check", "text-blue-500");
+    } else {
+        customers.push(newCustomer);
+        window.showToast("Dodano klienta", "user-plus", "text-green-500");
+    }
+
+    localStorage.setItem('dpd_customers', JSON.stringify(customers));
+    window.closeCustomerModal();
+    window.saveAndRender(); // Odśwież listę stopów
+    if (currentView === 'customers') window.renderCustomersList(); // Odśwież listę zarządzania
+};
+
+window.deleteCustomer = function(id) {
+    if (confirm("Usunąć tego klienta z bazy?")) {
+        customers = customers.filter(c => c.id !== id);
+        localStorage.setItem('dpd_customers', JSON.stringify(customers));
+        window.closeCustomerModal();
+        window.saveAndRender();
+        if (currentView === 'customers') window.renderCustomersList();
+        window.showToast("Usunięto klienta", "trash", "text-red-500");
+    }
+};
+
+window.deleteCustomerCurrent = function() {
+    const address = document.getElementById('custAddress').value;
+    const customer = customers.find(c => c.address === address);
+    if (customer) window.deleteCustomer(customer.id);
+};
+
+window.renderCustomersList = function() {
+    const listEl = document.getElementById('customersList');
+    const search = document.getElementById('customerSearch').value.toLowerCase();
+    
+    const filtered = customers.filter(c => 
+        c.name.toLowerCase().includes(search) || 
+        c.address.toLowerCase().includes(search) ||
+        (c.phone && c.phone.includes(search))
+    );
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-10 opacity-50"><p>Brak klientów</p></div>`;
+        return;
+    }
+
+    // Group by street
+    const groups = {};
+    filtered.forEach(c => {
+        let street = c.address.replace(/\d+.*$/, '').trim();
+        if (!street) street = "Inne";
+        street = street.charAt(0).toUpperCase() + street.slice(1);
+        
+        if (!groups[street]) groups[street] = [];
+        groups[street].push(c);
+    });
+    
+    const sortedStreets = Object.keys(groups).sort();
+
+    listEl.innerHTML = sortedStreets.map(street => {
+        const count = groups[street].length;
+        const customersHtml = groups[street].map(c => `
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm flex justify-between items-center mb-2 last:mb-0 gap-3">
+                <div class="flex-1 min-w-0 text-left">
+                     <p class="font-bold text-sm truncate">${c.address}</p>
+                    <p class="text-xs font-medium text-gray-500 truncate">${c.name}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    ${c.phone ? `
+                        <a href="tel:${c.phone}" class="flex-none w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-sm transition-colors">
+                            <i data-lucide="phone" class="w-5 h-5"></i>
+                        </a>
+                    ` : ''}
+                    <button onclick="window.openCustomerModal(${c.id})" class="p-2 bg-gray-50 dark:bg-zinc-800 rounded-full shadow-sm">
+                        <i data-lucide="pencil" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        return `
+        <div class="bg-gray-50 dark:bg-zinc-900/50 rounded-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden mb-3">
+            <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron-icon').classList.toggle('rotate-180')" class="w-full p-4 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                <h3 class="text-sm font-black uppercase text-dpd-red flex items-center gap-2 text-left">
+                    ${street} 
+                    <span class="bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 text-[10px] px-1.5 py-0.5 rounded-full">${count}</span>
+                </h3>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform chevron-icon"></i>
+            </button>
+            <div class="hidden p-4 pt-0 space-y-2 border-t border-gray-100 dark:border-zinc-800/50">
+                ${customersHtml}
+            </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
 };
 
 // --- WAKE LOCK ---
@@ -1052,22 +1278,42 @@ window.saveAndRender = function() {
             listEl.innerHTML = ''; document.getElementById('emptyState')?.classList.remove('hidden');
         } else {
             document.getElementById('emptyState')?.classList.add('hidden');
-            listEl.innerHTML = todayLogs.map(item => `
+            listEl.innerHTML = todayLogs.map(item => {
+                const customer = customers.find(c => c.address === item.address);
+                return `
                 <li class="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-sm border-l-4 ${item.type === 'pickup' ? 'border-zinc-500' : 'border-dpd-red'} border-y border-r border-gray-100 dark:border-zinc-700">
-                    <div class="flex justify-between items-start text-left">
-                        <div class="flex-1">
-                            <span class="text-[10px] font-black uppercase opacity-60 text-left">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
-                            <p class="text-base font-bold mt-1 text-left">${item.address}</p>
+                    <div class="flex justify-between items-start text-left mb-2">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-black uppercase opacity-60 text-left block">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
+                            <p class="text-base font-bold mt-1 text-left truncate pr-2">${item.address}</p>
                         </div>
                         <div class="flex gap-1 shrink-0 text-left">
-                            <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left"></i></button>
-                            <button onclick="window.openEditModal(${item.id})" class="p-1 opacity-40"><i data-lucide="pencil" class="w-4 h-4 text-left"></i></button>
-                            <button onclick="window.openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40'}"><i data-lucide="banknote" class="w-4 h-4 text-left"></i></button>
-                            <button onclick="window.handleConfirmAction('delete_stop', ${item.id})" class="p-1 text-red-400 opacity-40"><i data-lucide="trash-2" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40 hover:opacity-100"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="window.openEditModal(${item.id})" class="p-1 opacity-40 hover:opacity-100"><i data-lucide="pencil" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="window.openCustomerModal('${item.address}')" class="p-1 ${customer ? 'text-blue-500 opacity-100' : 'opacity-40 hover:opacity-100'}"><i data-lucide="user" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="window.openTipModal(${item.id})" class="p-1 ${item.tip > 0 ? 'text-green-500 opacity-100' : 'opacity-40 hover:opacity-100'}"><i data-lucide="banknote" class="w-4 h-4 text-left"></i></button>
+                            <button onclick="window.handleConfirmAction('delete_stop', ${item.id})" class="p-1 text-red-400 opacity-40 hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4 text-left"></i></button>
                         </div>
                     </div>
+                    ${customer ? `
+                        <div class="mt-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-900/50 flex justify-between items-center gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5 mb-0.5">
+                                    <i data-lucide="user" class="w-3 h-3 text-blue-500"></i>
+                                    <span class="text-xs font-bold text-blue-700 dark:text-blue-300 truncate">${customer.name}</span>
+                                </div>
+                                ${customer.static_note ? `<p class="text-[11px] text-blue-600/80 dark:text-blue-400/80 leading-tight break-words">${customer.static_note}</p>` : ''}
+                            </div>
+                            ${customer.phone ? `
+                                <a href="tel:${customer.phone}" class="flex-none w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-sm transition-colors" onclick="event.stopPropagation()">
+                                    <i data-lucide="phone" class="w-5 h-5"></i>
+                                </a>
+                            ` : ''}
+                        </div>
+                    ` : ''}
                     ${item.note ? `<p class="mt-2 text-xs opacity-60 italic border-t border-gray-50 dark:border-zinc-700 pt-1 text-left">${item.note}</p>` : ''}
-                </li>`).join('');
+                </li>`
+            }).join('');
         }
     }
     lucide.createIcons();
@@ -1076,8 +1322,13 @@ window.saveAndRender = function() {
 
 // --- MAPA & HISTORIA ---
 window.toggleView = function(v) {
-    ['listView', 'mapView', 'settingsView', 'statsView', 'aiSettingsView'].forEach(id => document.getElementById(id).classList.add('view-hidden'));
-    document.getElementById(v + 'View').classList.remove('view-hidden');
+    ['listView', 'mapView', 'settingsView', 'statsView', 'aiSettingsView', 'customersView', 'historyView'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('view-hidden');
+    });
+    const viewEl = document.getElementById(v + 'View');
+    if (viewEl) viewEl.classList.remove('view-hidden');
+    
     currentView = v;
     const btnText = document.getElementById('toggleText');
     const btnIcon = document.getElementById('toggleIcon');
@@ -1097,6 +1348,14 @@ window.toggleView = function(v) {
     
     if (v === 'stats') {
         setTimeout(window.renderStatistics, 100);
+    }
+
+    if (v === 'history') {
+        setTimeout(window.renderHistory, 100);
+    }
+
+    if (v === 'customers') {
+        setTimeout(window.renderCustomersList, 100);
     }
     
     lucide.createIcons();
@@ -1354,6 +1613,9 @@ window.applySettings = debounce(() => {
     config.wakeLockEnabled = document.getElementById('setWakeLockEnabled').checked;
     config.carAssistantEnabled = document.getElementById('setCarAssistantEnabled').checked;
     config.voiceConfirmationEnabled = document.getElementById('setVoiceConfirmationEnabled').checked;
+    config.smartAssistantEnabled = document.getElementById('setSmartAssistantEnabled').checked;
+    config.proximityRadius = parseInt(document.getElementById('setProximityRadius').value) || 40;
+    
     localStorage.setItem('dpd_config_v12', JSON.stringify(config));
     console.log('Settings saved. AI provider:', config.aiProvider, 'AI enabled:', config.aiEnabled);
     
@@ -1361,6 +1623,7 @@ window.applySettings = debounce(() => {
     window.setAIStatusUI();
     window.toggleWakeLock(config.wakeLockEnabled);
     if (window.CarAssistant) CarAssistant.setActive(config.carAssistantEnabled);
+    if (window.SmartAssistant) SmartAssistant.setActive(config.smartAssistantEnabled);
     
     sunTimes = null;
     window.refreshTheme();
@@ -1637,9 +1900,201 @@ const CarAssistant = {
     }
 };
 
+// --- SMART ASSISTANT (INTELIGENTNY ASYSTENT TRASY) ---
+window.closeSuggestion = () => {
+    document.getElementById('suggestionCard').classList.add('hidden');
+    if (window.SmartAssistant) window.SmartAssistant.isSpoken = false; // Reset spoken state on manual close
+};
+
+window.useCurrentGpsForCustomer = function() {
+    if (!platform.hasGeolocation) {
+        window.showToast("Brak modułu GPS", "map-pin-off", "text-red-500");
+        return;
+    }
+    
+    const btn = document.getElementById('btnGpsCustomer');
+    if(btn) btn.classList.add('animate-pulse');
+    window.showToast("Pobieranie pozycji...", "loader", "text-blue-500");
+    
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            if(btn) btn.classList.remove('animate-pulse');
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            if (customerMap) {
+                customerMap.setView([lat, lng], 18);
+                if (customerMarker) customerMap.removeLayer(customerMarker);
+                customerMarker = L.marker([lat, lng], { draggable: true }).addTo(customerMap);
+                window.showToast("Zaktualizowano pozycję", "map-pin", "text-green-500");
+            }
+        },
+        (err) => {
+             if(btn) btn.classList.remove('animate-pulse');
+             console.error(err);
+             window.showToast("Błąd GPS", "alert-circle", "text-red-500");
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+};
+
+const SmartAssistant = {
+    active: false,
+    watchId: null,
+    intervalId: null,
+    proximityRadius: 40,
+    lastSuggestion: null,
+    isSpoken: false,
+    lastPosition: null,
+
+    init: function() {
+        if (config.smartAssistantEnabled) {
+            this.proximityRadius = config.proximityRadius || 40;
+            this.start();
+        }
+    },
+
+    setActive: function(enabled) {
+        if (enabled) {
+            this.proximityRadius = config.proximityRadius || 40;
+            this.start();
+        } else {
+            this.stop();
+        }
+    },
+
+    start: function() {
+        if (this.active) return;
+        this.active = true;
+        console.log('SmartAssistant: Starting...');
+        
+        // Start periodic check
+        this.intervalId = setInterval(() => this.checkProximity(), 2000);
+        
+        // Ensure we have GPS permissions and watch position
+        if (platform.hasGeolocation) {
+             this.watchId = navigator.geolocation.watchPosition(
+                (pos) => { this.lastPosition = pos; },
+                (err) => console.log('SmartAssistant GPS error:', err),
+                { enableHighAccuracy: true, maximumAge: 0 }
+            );
+        }
+        window.showToast("Inteligentny Asystent włączony", "brain-circuit", "text-blue-500");
+    },
+
+    stop: function() {
+        if (!this.active) return;
+        this.active = false;
+        if (this.intervalId) clearInterval(this.intervalId);
+        if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
+        this.hideSuggestion();
+        window.showToast("Inteligentny Asystent wyłączony", "brain-circuit", "text-gray-500");
+    },
+
+    checkProximity: function() {
+        if (!this.lastPosition || !this.active) return;
+        this.processProximity(this.lastPosition);
+    },
+
+    processProximity: function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        // speed not used anymore
+        
+        let closest = null;
+        let minDist = Infinity;
+        
+        customers.forEach(c => {
+            if (c.lat && c.lng) {
+                const dist = this.calculateDistance(lat, lng, c.lat, c.lng);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = c;
+                }
+            }
+        });
+
+        if (closest && minDist <= this.proximityRadius) {
+            this.showSuggestion(closest, minDist);
+        } else {
+            this.hideSuggestion();
+        }
+    },
+
+    calculateDistance: function(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    },
+
+    showSuggestion: function(customer, dist) {
+        const card = document.getElementById('suggestionCard');
+        if (!card) return;
+        
+        document.getElementById('suggAddress').textContent = customer.address;
+        document.getElementById('suggName').textContent = customer.name + ` (${Math.round(dist)}m)`;
+        
+        const noteBox = document.getElementById('suggNoteBox');
+        const noteText = document.getElementById('suggNote');
+        
+        if (customer.static_note) {
+            noteText.textContent = customer.static_note;
+            noteBox.classList.remove('hidden');
+        } else {
+            noteBox.classList.add('hidden');
+        }
+        
+        const callBtn = document.getElementById('suggCallBtn');
+        if (customer.phone) {
+             callBtn.onclick = () => window.location.href = `tel:${customer.phone}`;
+             callBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+             callBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+        
+        const confirmBtn = document.getElementById('suggConfirmBtn');
+        confirmBtn.onclick = () => this.confirmStop(customer);
+        
+        card.classList.remove('hidden');
+        this.lastSuggestion = customer;
+    },
+    
+    hideSuggestion: function() {
+        const card = document.getElementById('suggestionCard');
+        if (card && !card.classList.contains('hidden')) card.classList.add('hidden');
+        
+        // Don't clear lastSuggestion immediately to prevent flickering if GPS jitters
+        if (this.lastPosition && this.lastSuggestion) {
+            const dist = this.calculateDistance(
+                this.lastPosition.coords.latitude, this.lastPosition.coords.longitude,
+                this.lastSuggestion.lat, this.lastSuggestion.lng
+            );
+            if (dist > this.proximityRadius * 1.5) {
+                this.isSpoken = false;
+                this.lastSuggestion = null;
+            }
+        }
+    },
+    
+    // speakSuggestion: removed as requested
+    
+    confirmStop: function(customer) {
+        window.addEntry(customer.address, customer.static_note, 'delivery', 0);
+        this.hideSuggestion();
+        this.isSpoken = true; // Mark as done
+    }
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     // Inicjalizuj CarAssistant
     CarAssistant.init();
+    // Inicjalizuj SmartAssistant
+    SmartAssistant.init();
 
     document.getElementById('setAiEnabled').checked = config.aiEnabled !== false;
     document.getElementById('setGeminiKey').value = config.geminiKey || "";
@@ -1652,6 +2107,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('setWakeLockEnabled').checked = config.wakeLockEnabled === true;
     document.getElementById('setCarAssistantEnabled').checked = config.carAssistantEnabled === true;
     document.getElementById('setVoiceConfirmationEnabled').checked = config.voiceConfirmationEnabled === true;
+    document.getElementById('setSmartAssistantEnabled').checked = config.smartAssistantEnabled === true;
+    document.getElementById('setProximityRadius').value = config.proximityRadius || 40;
     
     window.updateApiKeyPlaceholder();
     
@@ -1659,6 +2116,25 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('setGeminiKey').addEventListener('input', window.applySettings);
     document.getElementById('setCity').addEventListener('input', window.applySettings);
     document.getElementById('setStopWord').addEventListener('input', window.applySettings);
+    document.getElementById('setSmartAssistantEnabled')?.addEventListener('change', window.applySettings);
+    document.getElementById('setProximityRadius')?.addEventListener('input', window.applySettings);
+    
+    // Bind GPS Button in Customer Modal
+    document.getElementById('btnGpsCustomer')?.addEventListener('click', window.useCurrentGpsForCustomer);
+    
+    // Auto-geocode on address blur in customer modal
+    document.getElementById('custAddress')?.addEventListener('blur', () => {
+         const addr = document.getElementById('custAddress').value;
+         if (addr && config.gpsEnabled && customerMap) {
+             window.geocodeAddress(addr).then(coords => {
+                 if (coords) {
+                     customerMap.setView([coords.lat, coords.lng], 16);
+                     if (customerMarker) customerMap.removeLayer(customerMarker);
+                     customerMarker = L.marker([coords.lat, coords.lng], { draggable: true }).addTo(customerMap);
+                 }
+             });
+         }
+    });
     
     if (!config.city && navigator.geolocation) window.updateCityFromGps();
     if (config.wakeLockEnabled) window.toggleWakeLock(true);
