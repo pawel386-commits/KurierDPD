@@ -88,3 +88,4 @@ z:\WWW\stopy\
 *   **System:** Dodano obsługę Screen Wake Lock API (blokada wygaszania ekranu).
 *   **Smart:** Dodano moduł CarAssistant wykrywający powrót do auta (ładowanie) i ruch (GPS) w celu automatycznego wywołania zapisu.
 *   **UI:** Wydzielono zaawansowane ustawienia AI do dedykowanej podstrony.
+*   **Fix (iOS):** Naprawiono widoczność checkboxów w ustawieniach na iPhone (problem ze stylami systemowymi).

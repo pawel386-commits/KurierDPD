@@ -50,7 +50,7 @@ input, select, textarea { font-size: 16px !important; }
 
 /* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
-    input, textarea { 
+    input:not([type="checkbox"]):not([type="radio"]), textarea { 
         -webkit-appearance: none;
         appearance: none;
         border-radius: 0;
