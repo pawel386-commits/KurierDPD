@@ -3,7 +3,7 @@ let addresses = [];
 try { addresses = JSON.parse(localStorage.getItem('dpd_logs_v13') || '[]'); } catch(e) { addresses = []; }
 
 let config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringify({
-    name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true, geminiModel: "", aiProvider: "groq", wakeLockEnabled: false, carAssistantEnabled: false
+    name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true, geminiModel: "", aiProvider: "groq", wakeLockEnabled: false, carAssistantEnabled: false, voiceConfirmationEnabled: false
 }));
 
 // System prompt dla AI
@@ -925,6 +925,16 @@ if (!platform.hasSpeechRecognition) {
         }
     };
     window.toggleRecognition = async () => { 
+        // iOS Fix: Warm-up speech synthesis on user interaction
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            // Używamy kropki jako neutralnego znaku, volume 0 aby było cicho
+            const warmup = new SpeechSynthesisUtterance(".");
+            warmup.volume = 0; 
+            warmup.lang = 'pl-PL';
+            window.speechSynthesis.speak(warmup);
+        }
+
         if (!isProcessingAI && recog) {
             if (isRecording) {
                 // Zatrzymaj nagrywanie i przetwórz wynik
@@ -1343,6 +1353,7 @@ window.applySettings = debounce(() => {
     config.gpsEnabled = document.getElementById('setGpsEnabled').checked;
     config.wakeLockEnabled = document.getElementById('setWakeLockEnabled').checked;
     config.carAssistantEnabled = document.getElementById('setCarAssistantEnabled').checked;
+    config.voiceConfirmationEnabled = document.getElementById('setVoiceConfirmationEnabled').checked;
     localStorage.setItem('dpd_config_v12', JSON.stringify(config));
     console.log('Settings saved. AI provider:', config.aiProvider, 'AI enabled:', config.aiEnabled);
     
