@@ -1,0 +1,70 @@
+:root { --dpd-red: #dc0032; }
+html { background-color: var(--dpd-red); transition: background-color 0.3s ease; }
+html.dark { background-color: #000000; }
+body { -webkit-tap-highlight-color: transparent; user-select: text; margin: 0; padding: 0; background-color: #f4f4f4; height: 100%; }
+/* Pozwól na zaznaczanie tekstu, ale nie na przyciskach */
+button, .no-select { user-select: none; }
+.dark body { background-color: #000000; }
+.header-safe-area { padding-top: env(safe-area-inset-top); background-color: var(--dpd-red); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+.pulse-red { animation: pulse-red 1.5s infinite; }
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(220, 0, 50, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 0, 50, 0); }
+}
+
+.pulse-ai { animation: pulse-ai 1s infinite; background-color: #8b5cf6 !important; }
+@keyframes pulse-ai {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+}
+
+#map { height: 100%; width: 100%; z-index: 1; }
+.view-hidden { display: none !important; }
+::-webkit-scrollbar { display: none; }
+.modal-active { opacity: 1 !important; pointer-events: auto !important; }
+.modal-active > div { transform: scale(1) !important; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+input, select, textarea { font-size: 16px !important; }
+
+/* Border colors for dark mode */
+.dark .border-dpd-red { border-color: #dc0032 !important; }
+.dark .border-zinc-500 { border-color: #71717a !important; }
+
+/* Cross-platform improvements */
+@media (hover: hover) {
+    /* Desktop - pokaż hover effects */
+    button:hover { opacity: 0.8; }
+}
+
+@media (hover: none) {
+    /* Mobile - większe targety dotykowe */
+    button { min-height: 44px; min-width: 44px; }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    input, textarea { 
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 0;
+    }
+}
+
+/* Marker Badge Styling */
+.marker-pin-wrapper { position: relative; width: 32px; height: 32px; }
+.marker-badge { 
+    position: absolute; top: -5px; right: -5px; 
+    background: #000; color: #fff; 
+    font-size: 10px; font-weight: 900; 
+    width: 16px; height: 16px; 
+    border-radius: 50%; display: flex; 
+    align-items: center; justify-content: center; 
+    border: 2px solid #fff; z-index: 10;
+}

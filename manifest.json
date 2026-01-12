@@ -1,0 +1,19 @@
+{
+  "name": "DPD Assistant",
+  "short_name": "DPD Stopy",
+  "description": "Asystent kuriera DPD - zarządzanie stopami i nawigacja",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#dc0032",
+  "theme_color": "#dc0032",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [],
+  "lang": "pl"
+}
