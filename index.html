@@ -396,6 +396,15 @@
                     <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block text-left">Adres (Powiązanie)</label>
                     <input type="text" id="custAddress" class="w-full bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl text-base font-bold border-none outline-none opacity-60" readonly>
                 </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block text-left">Lokalizacja (Mapa)</label>
+                    <div id="customerMap" class="w-full h-48 bg-gray-200 dark:bg-zinc-800 rounded-xl mb-2 z-10 relative z-0"></div>
+                    <button id="btnGpsCustomer" onclick="window.useCurrentGpsForCustomer()" class="w-full py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center justify-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                        <i data-lucide="crosshair" class="w-4 h-4"></i>
+                        Użyj mojej pozycji GPS
+                    </button>
+                </div>
                 
                 <div>
                     <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block text-left">Imię i Nazwisko / Nazwa</label>

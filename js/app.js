@@ -386,43 +386,8 @@ window.renderCustomersList = function() {
 };
 
 // --- WAKE LOCK ---
-window.toggleWakeLock = async function(enable) {
-    const dot = document.getElementById('wakeDot');
-    const text = document.getElementById('wakeText');
-    
-    if (enable && 'wakeLock' in navigator) {
-        try {
-            if (wakeLock !== null) return; // Already active
-            wakeLock = await navigator.wakeLock.request('screen');
-            wakeLock.addEventListener('release', () => {
-                console.log('Wake Lock released');
-                wakeLock = null;
-                if (dot) dot.className = "w-1.5 h-1.5 bg-red-500 rounded-full transition-colors";
-                if (text) text.textContent = "Blokada: Wył";
-            });
-            console.log('Wake Lock active');
-            if (dot) dot.className = "w-1.5 h-1.5 bg-green-500 rounded-full transition-colors";
-            if (text) text.textContent = "Blokada: Wł";
-        } catch (err) {
-            console.error(`${err.name}, ${err.message}`);
-            if (dot) dot.className = "w-1.5 h-1.5 bg-yellow-500 rounded-full transition-colors";
-            if (text) text.textContent = "Blokada: Błąd";
-        }
-    } else {
-        if (wakeLock) {
-            await wakeLock.release();
-            wakeLock = null;
-        }
-        if (dot) dot.className = "w-1.5 h-1.5 bg-red-500 rounded-full transition-colors";
-        if (text) text.textContent = "Blokada: Wył";
-    }
-};
+// Old implementation removed - see WakeLockManager below
 
-document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && config.wakeLockEnabled) {
-        await window.toggleWakeLock(true);
-    }
-});
 
 // --- UI & PARSOWANIE ---
 window.setAIStatusUI = function() {
@@ -1361,6 +1326,71 @@ window.toggleView = function(v) {
     lucide.createIcons();
 };
 
+const WakeLockManager = {
+    wakeLock: null,
+    wakeVideo: null,
+
+    toggle: async function(enabled) {
+        // Video Loop Hack (for iOS/Android background execution)
+        if (!this.wakeVideo) {
+            this.wakeVideo = document.createElement('video');
+            this.wakeVideo.setAttribute('playsinline', '');
+            this.wakeVideo.setAttribute('no-widget', '');
+            this.wakeVideo.setAttribute('loop', '');
+            this.wakeVideo.setAttribute('muted', '');
+            this.wakeVideo.setAttribute('hidden', '');
+            // Tiny blank mp4
+            this.wakeVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAQAAAAAYbW9vdgAAAGxtdmhkAAAAAAAZN4QAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAGGlvZHMAAAAAEICAgAcAT////3//AAACQXRyYWsAAAXjAAAAMHRraGQAAAABAAAAAQAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAABAAAAAAHgbWRpYQAAACBtZGlhAAAAIG1kaGQAAAAAABk3hAAAAAAAAAAAAAEAAAAAAAARaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAAAAAAGWbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAABVnN0YmwAAACpc3RzZAAAAAAAAAABAAAAmWF2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAQABAAAAAAAIAAAACAAAAAAAAAAAAAAAEAVjZmZyAAAADkFhY2xpbjEuMC4xAAACAGF2Y0MBAAAALgECA/8AIF9iA/8AIf8LAAAADAECA/8AAQAaYXNsAAAAAAABAAAAAAB4AAAAPmN0dHMAAAAAAAAACAAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAA3N0dHMAAAAAAAAAAQAAAA0AAAABAAAAFHN0c3oAAAAAAAAAEAAAAAIAAAABc3RzYwAAAAAAAAABAAAAAQAAAA0AAAABAAAAFHN0Y28AAAAAAAAAAQAAAEYAAAAYdHJheQAAAABraGlkAAAAAQAACAAAAAB1ZHRhAAAAZ21ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguMjkuMTAw';
+            document.body.appendChild(this.wakeVideo);
+        }
+
+        if (enabled) {
+            // Screen Wake Lock API
+            if ('wakeLock' in navigator) {
+                try {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    this.wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released');
+                        this.wakeLock = null;
+                        this.updateUI(false);
+                    });
+                    console.log('Wake Lock active');
+                } catch (err) {
+                    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+                }
+            }
+            
+            // Video Hack
+            try {
+                await this.wakeVideo.play();
+                console.log('Wake Video playing');
+            } catch(e) {
+                console.error('Wake Video error:', e);
+            }
+
+            this.updateUI(true);
+        } else {
+            if (this.wakeLock) {
+                await this.wakeLock.release();
+                this.wakeLock = null;
+            }
+            if (this.wakeVideo) {
+                this.wakeVideo.pause();
+            }
+            this.updateUI(false);
+        }
+    },
+    
+    updateUI: function(active) {
+        const wakeDot = document.getElementById('wakeDot');
+        const wakeText = document.getElementById('wakeText');
+        if (wakeDot) wakeDot.className = `w-1.5 h-1.5 ${active ? 'bg-green-500' : 'bg-red-500'} rounded-full transition-colors`;
+        if (wakeText) wakeText.textContent = active ? "Blokada: Wł" : "Blokada: Wył";
+    }
+};
+
+window.toggleWakeLock = (enabled) => WakeLockManager.toggle(enabled);
+
 window.toggleMenu = function() {
     const menu = document.getElementById('menuDropdown');
     if (menu) {
@@ -1946,6 +1976,8 @@ window.SmartAssistant = {
     lastSuggestions: [],
     isSpoken: false,
     lastPosition: null,
+    isMinimized: false,
+    expandedIndex: null,
 
     init: function() {
         if (config.smartAssistantEnabled) {
@@ -1997,6 +2029,7 @@ window.SmartAssistant = {
     processProximity: function(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        const speed = pos.coords.speed || 0; // m/s
         
         let matches = [];
         customers.forEach(c => {
@@ -2010,11 +2043,39 @@ window.SmartAssistant = {
 
         matches.sort((a, b) => a.dist - b.dist);
 
+        // Voice Assistant Logic
+        if (matches.length > 0) {
+            const closest = matches[0];
+            // Reset spoken flag if we moved away (> 30m)
+            if (closest.dist > 30) {
+                this.isSpoken = false;
+            }
+            
+            // Speak if close (< 20m), stopped (< 1m/s), and not spoken yet
+            if (closest.dist <= 20 && speed < 1.0 && !this.isSpoken) {
+                this.speakAnnouncement(closest.customer);
+                this.isSpoken = true;
+            }
+        }
+
         if (matches.length > 0) {
             this.showSuggestions(matches);
         } else {
             this.hideSuggestion();
         }
+    },
+
+    speakAnnouncement: function(customer) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        
+        const noteText = customer.static_note ? `. Kod to ${customer.static_note}` : '';
+        const msg = `Jesteś u ${customer.name}${noteText}`;
+        
+        const utterance = new SpeechSynthesisUtterance(msg);
+        utterance.lang = 'pl-PL';
+        utterance.rate = 1.1;
+        window.speechSynthesis.speak(utterance);
     },
 
     calculateDistance: function(lat1, lon1, lat2, lon2) {
@@ -2035,6 +2096,25 @@ window.SmartAssistant = {
         this.lastSuggestions = matches;
         card.classList.remove('hidden');
 
+        // Minimized View
+        if (this.isMinimized) {
+            card.innerHTML = `
+                <div onclick="window.SmartAssistant.maximize()" class="flex justify-between items-center cursor-pointer p-1">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
+                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Sugestie (${matches.length})</span>
+                    </div>
+                    <i data-lucide="chevron-up" class="w-4 h-4 text-gray-400"></i>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+
+        // Full View
         if (matches.length === 1) {
             const match = matches[0];
             const customer = match.customer;
@@ -2047,7 +2127,10 @@ window.SmartAssistant = {
                         <h3 class="text-lg font-black text-gray-800 dark:text-gray-100 leading-tight">${customer.address}</h3>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">${customer.name} (${Math.round(dist)}m)</p>
                     </div>
-                    <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <div class="flex gap-1">
+                        <button onclick="window.SmartAssistant.minimize()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
                 </div>
                 ${customer.static_note ? `
                 <div class="bg-white dark:bg-zinc-900/50 p-2 rounded-lg mb-3 border border-blue-100 dark:border-blue-800/30">
@@ -2067,7 +2150,10 @@ window.SmartAssistant = {
             card.innerHTML = `
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-[10px] font-black uppercase text-blue-500 tracking-wider">Sugestie (${matches.length})</span>
-                    <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <div class="flex gap-1">
+                        <button onclick="window.SmartAssistant.minimize()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
                 </div>
                 <div class="space-y-2 max-h-60 overflow-y-auto">
                     ${matches.map((m, idx) => `
@@ -2077,9 +2163,9 @@ window.SmartAssistant = {
                                     <p class="font-bold text-sm leading-tight">${m.customer.address}</p>
                                     <p class="text-[10px] text-gray-500">${Math.round(m.dist)}m • ${m.customer.name}</p>
                                 </div>
-                                <i data-lucide="chevron-down" id="chevron-${idx}" class="w-4 h-4 text-blue-400 transition-transform"></i>
+                                <i data-lucide="chevron-down" id="chevron-${idx}" class="w-4 h-4 text-blue-400 transition-transform ${this.expandedIndex === idx ? 'rotate-180' : ''}"></i>
                             </div>
-                            <div id="details-${idx}" class="hidden p-3 pt-0 border-t border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/5">
+                            <div id="details-${idx}" class="${this.expandedIndex === idx ? '' : 'hidden'} p-3 pt-0 border-t border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/5">
                                 ${m.customer.static_note ? `<p class="text-xs font-mono text-blue-600 dark:text-blue-300 mb-3 mt-2">${m.customer.static_note}</p>` : ''}
                                 <div class="flex gap-2 mt-2">
                                     <a href="${m.customer.phone ? 'tel:' + m.customer.phone : '#'}" class="flex-none w-10 h-10 flex items-center justify-center bg-green-500 ${!m.customer.phone ? 'opacity-50 pointer-events-none' : ''} text-white rounded-lg shadow-sm active:scale-95 transition-all">
@@ -2100,18 +2186,29 @@ window.SmartAssistant = {
     },
     
     toggleExpand: function(idx) {
-        const details = document.getElementById(`details-${idx}`);
-        const chevron = document.getElementById(`chevron-${idx}`);
-        if (details) {
-            details.classList.toggle('hidden');
-            if (chevron) chevron.classList.toggle('rotate-180');
+        if (this.expandedIndex === idx) {
+            this.expandedIndex = null;
+        } else {
+            this.expandedIndex = idx;
         }
+        this.showSuggestions(this.lastSuggestions);
+    },
+
+    minimize: function() {
+        this.isMinimized = true;
+        this.showSuggestions(this.lastSuggestions);
+    },
+
+    maximize: function() {
+        this.isMinimized = false;
+        this.showSuggestions(this.lastSuggestions);
     },
     
     hideSuggestion: function() {
         const card = document.getElementById('suggestionCard');
         if (card && !card.classList.contains('hidden')) card.classList.add('hidden');
         this.lastSuggestions = [];
+        this.expandedIndex = null;
     },
     
     confirmStop: function(address) {
