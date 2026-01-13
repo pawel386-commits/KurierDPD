@@ -1205,7 +1205,7 @@ if (!platform.hasSpeechRecognition) {
 }
 
 // --- ZAPIS I RENDER ---
-window.addEntry = function(addr, note = "", type = 'delivery', tip = 0) {
+window.addEntry = function(addr, note = "", type = 'delivery', tip = 0, isAuto = false) {
     if (!addr || addr.trim().length < 2) return;
     
     // Normalizuj adres - zachowaj ukośniki i popraw format
@@ -1242,7 +1242,7 @@ window.addEntry = function(addr, note = "", type = 'delivery', tip = 0) {
         if (tipValue > 0) {
             msg += ` Napiwek ${tipValue} złotych.`;
         }
-        if (entry.note && entry.note.length > 0) {
+        if (entry.note && entry.note.length > 0 && !isAuto) {
             msg += ` Notatka: ${entry.note}.`;
         }
         const utterance = new SpeechSynthesisUtterance(msg);
@@ -1285,7 +1285,7 @@ window.saveAndRender = function() {
                     <div class="flex justify-between items-start text-left mb-2">
                         <div class="flex-1 min-w-0">
                             <span class="text-[10px] font-black uppercase opacity-60 text-left block">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
-                            <p class="text-base font-bold mt-1 text-left truncate pr-2">${item.address}</p>
+                            <p class="text-base font-bold mt-1 text-left pr-2 break-words">${item.address}</p>
                         </div>
                         <div class="flex gap-1 shrink-0 text-left">
                             <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40 hover:opacity-100"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left"></i></button>
@@ -1938,12 +1938,12 @@ window.useCurrentGpsForCustomer = function() {
     );
 };
 
-const SmartAssistant = {
+window.SmartAssistant = {
     active: false,
     watchId: null,
     intervalId: null,
     proximityRadius: 40,
-    lastSuggestion: null,
+    lastSuggestions: [],
     isSpoken: false,
     lastPosition: null,
 
@@ -1968,10 +1968,8 @@ const SmartAssistant = {
         this.active = true;
         console.log('SmartAssistant: Starting...');
         
-        // Start periodic check
         this.intervalId = setInterval(() => this.checkProximity(), 2000);
         
-        // Ensure we have GPS permissions and watch position
         if (platform.hasGeolocation) {
              this.watchId = navigator.geolocation.watchPosition(
                 (pos) => { this.lastPosition = pos; },
@@ -1999,23 +1997,21 @@ const SmartAssistant = {
     processProximity: function(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        // speed not used anymore
         
-        let closest = null;
-        let minDist = Infinity;
-        
+        let matches = [];
         customers.forEach(c => {
             if (c.lat && c.lng) {
                 const dist = this.calculateDistance(lat, lng, c.lat, c.lng);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = c;
+                if (dist <= this.proximityRadius) {
+                    matches.push({ customer: c, dist: dist });
                 }
             }
         });
 
-        if (closest && minDist <= this.proximityRadius) {
-            this.showSuggestion(closest, minDist);
+        matches.sort((a, b) => a.dist - b.dist);
+
+        if (matches.length > 0) {
+            this.showSuggestions(matches);
         } else {
             this.hideSuggestion();
         }
@@ -2032,61 +2028,99 @@ const SmartAssistant = {
         return R * c;
     },
 
-    showSuggestion: function(customer, dist) {
+    showSuggestions: function(matches) {
         const card = document.getElementById('suggestionCard');
         if (!card) return;
         
-        document.getElementById('suggAddress').textContent = customer.address;
-        document.getElementById('suggName').textContent = customer.name + ` (${Math.round(dist)}m)`;
-        
-        const noteBox = document.getElementById('suggNoteBox');
-        const noteText = document.getElementById('suggNote');
-        
-        if (customer.static_note) {
-            noteText.textContent = customer.static_note;
-            noteBox.classList.remove('hidden');
-        } else {
-            noteBox.classList.add('hidden');
-        }
-        
-        const callBtn = document.getElementById('suggCallBtn');
-        if (customer.phone) {
-             callBtn.onclick = () => window.location.href = `tel:${customer.phone}`;
-             callBtn.classList.remove('opacity-50', 'pointer-events-none');
-        } else {
-             callBtn.classList.add('opacity-50', 'pointer-events-none');
-        }
-        
-        const confirmBtn = document.getElementById('suggConfirmBtn');
-        confirmBtn.onclick = () => this.confirmStop(customer);
-        
+        this.lastSuggestions = matches;
         card.classList.remove('hidden');
-        this.lastSuggestion = customer;
+
+        if (matches.length === 1) {
+            const match = matches[0];
+            const customer = match.customer;
+            const dist = match.dist;
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="text-[10px] font-black uppercase text-blue-500 tracking-wider">Sugestia Asystenta</span>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-gray-100 leading-tight">${customer.address}</h3>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">${customer.name} (${Math.round(dist)}m)</p>
+                    </div>
+                    <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                ${customer.static_note ? `
+                <div class="bg-white dark:bg-zinc-900/50 p-2 rounded-lg mb-3 border border-blue-100 dark:border-blue-800/30">
+                    <p class="text-xs font-mono text-blue-600 dark:text-blue-300">${customer.static_note}</p>
+                </div>` : ''}
+                <div class="flex gap-2">
+                    <a href="${customer.phone ? 'tel:' + customer.phone : '#'}" class="flex-none w-12 h-12 flex items-center justify-center bg-green-500 ${!customer.phone ? 'opacity-50 pointer-events-none' : ''} text-white rounded-xl shadow-sm active:scale-95 transition-all">
+                        <i data-lucide="phone" class="w-5 h-5"></i>
+                    </a>
+                    <button onclick="window.SmartAssistant.confirmStop('${customer.address.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-500 text-white rounded-xl font-black uppercase text-xs shadow-sm shadow-blue-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        Potwierdź Stop
+                    </button>
+                </div>
+            `;
+        } else {
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-black uppercase text-blue-500 tracking-wider">Sugestie (${matches.length})</span>
+                    <button onclick="window.closeSuggestion()" class="p-1 opacity-50 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="space-y-2 max-h-60 overflow-y-auto">
+                    ${matches.map((m, idx) => `
+                        <div class="bg-white dark:bg-zinc-900/50 rounded-lg border border-blue-100 dark:border-blue-900/30 overflow-hidden">
+                            <div onclick="window.SmartAssistant.toggleExpand(${idx})" class="p-3 flex justify-between items-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+                                <div>
+                                    <p class="font-bold text-sm leading-tight">${m.customer.address}</p>
+                                    <p class="text-[10px] text-gray-500">${Math.round(m.dist)}m • ${m.customer.name}</p>
+                                </div>
+                                <i data-lucide="chevron-down" id="chevron-${idx}" class="w-4 h-4 text-blue-400 transition-transform"></i>
+                            </div>
+                            <div id="details-${idx}" class="hidden p-3 pt-0 border-t border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/5">
+                                ${m.customer.static_note ? `<p class="text-xs font-mono text-blue-600 dark:text-blue-300 mb-3 mt-2">${m.customer.static_note}</p>` : ''}
+                                <div class="flex gap-2 mt-2">
+                                    <a href="${m.customer.phone ? 'tel:' + m.customer.phone : '#'}" class="flex-none w-10 h-10 flex items-center justify-center bg-green-500 ${!m.customer.phone ? 'opacity-50 pointer-events-none' : ''} text-white rounded-lg shadow-sm active:scale-95 transition-all">
+                                        <i data-lucide="phone" class="w-4 h-4"></i>
+                                    </a>
+                                    <button onclick="window.SmartAssistant.confirmStop('${m.customer.address.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-500 text-white rounded-lg font-black uppercase text-[10px] shadow-sm shadow-blue-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                        <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                                        Potwierdź
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        lucide.createIcons();
+    },
+    
+    toggleExpand: function(idx) {
+        const details = document.getElementById(`details-${idx}`);
+        const chevron = document.getElementById(`chevron-${idx}`);
+        if (details) {
+            details.classList.toggle('hidden');
+            if (chevron) chevron.classList.toggle('rotate-180');
+        }
     },
     
     hideSuggestion: function() {
         const card = document.getElementById('suggestionCard');
         if (card && !card.classList.contains('hidden')) card.classList.add('hidden');
-        
-        // Don't clear lastSuggestion immediately to prevent flickering if GPS jitters
-        if (this.lastPosition && this.lastSuggestion) {
-            const dist = this.calculateDistance(
-                this.lastPosition.coords.latitude, this.lastPosition.coords.longitude,
-                this.lastSuggestion.lat, this.lastSuggestion.lng
-            );
-            if (dist > this.proximityRadius * 1.5) {
-                this.isSpoken = false;
-                this.lastSuggestion = null;
-            }
-        }
+        this.lastSuggestions = [];
     },
     
-    // speakSuggestion: removed as requested
-    
-    confirmStop: function(customer) {
-        window.addEntry(customer.address, customer.static_note, 'delivery', 0);
-        this.hideSuggestion();
-        this.isSpoken = true; // Mark as done
+    confirmStop: function(address) {
+        const customer = customers.find(c => c.address === address);
+        if (customer) {
+            window.addEntry(customer.address, customer.static_note, 'delivery', 0, true);
+            this.hideSuggestion();
+            this.isSpoken = true; 
+        }
     }
 };
 
