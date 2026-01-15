@@ -892,6 +892,44 @@ window.cycleThemeManual = function() {
 window.formatPolishNumbers = function(text) {
     if (!text) return '';
     let t = text.trim();
+    if (platform && platform.isIOS) {
+        const iosTeenMap = {
+            'jeden naście': '11',
+            'jedna naście': '11',
+            'jedno naście': '11',
+            'dwie naście': '12',
+            'dwa naście': '12',
+            'trzy naście': '13',
+            'cztery naście': '14',
+            'pięć naście': '15',
+            'sześć naście': '16',
+            'siedem naście': '17',
+            'osiem naście': '18',
+            'dziewięć naście': '19'
+        };
+        Object.keys(iosTeenMap).forEach(phrase => {
+            const regexTeen = new RegExp(`\\b${phrase}\\b`, 'gi');
+            t = t.replace(regexTeen, iosTeenMap[phrase]);
+        });
+        const iosSimpleMap = {
+            'jeden': '1',
+            'jedna': '1',
+            'jedno': '1',
+            'dwa': '2',
+            'dwie': '2',
+            'trzy': '3',
+            'cztery': '4',
+            'pięć': '5',
+            'sześć': '6',
+            'siedem': '7',
+            'osiem': '8',
+            'dziewięć': '9'
+        };
+        Object.keys(iosSimpleMap).forEach(w => {
+            const regexSimple = new RegExp(`\\b${w}\\b`, 'gi');
+            t = t.replace(regexSimple, iosSimpleMap[w]);
+        });
+    }
     
     // 1. Najpierw zachowaj oryginalną wielkość liter dla nazw ulic (pierwsza litera wielka)
     // Podziel na słowa, zachowując strukturę
@@ -952,6 +990,25 @@ window.formatPolishNumbers = function(text) {
     // 8. Przywróć wielką literę na początku (dla nazw ulic)
     if (t.length > 0) {
         t = t.charAt(0).toUpperCase() + t.slice(1);
+    }
+    if (platform && platform.isIOS && t.length > 0) {
+        const last = t.charAt(t.length - 1);
+        const iosLastMap = {
+            'ą': 'A',
+            'ć': 'C',
+            'ę': 'E',
+            'ł': 'L',
+            'ń': 'N',
+            'ó': 'O',
+            'ś': 'S',
+            'ź': 'Z',
+            'ż': 'Z'
+        };
+        const key = last.toLowerCase();
+        if (iosLastMap[key]) {
+            t = t.slice(0, -1) + iosLastMap[key];
+        }
+        t = t.replace(/(\d+)\s+([a-zA-Z])\b/g, '$1$2');
     }
     
     return t.trim();
