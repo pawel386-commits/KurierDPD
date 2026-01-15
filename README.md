@@ -1,100 +1,114 @@
-# DPD Stopy - Asystent Kuriera
+# Kurier Log AI - Asystent Kuriera DPD
 
-Aplikacja typu PWA (Progressive Web App) przeznaczona dla kurierów DPD do ewidencjonowania odwiedzonych punktów (stopów), zarządzania notatkami oraz rozliczeń finansowych (napiwki).
+Aplikacja PWA (Progressive Web App) wspomagająca pracę kuriera, umożliwiająca szybkie rejestrowanie stopów, zarządzanie bazą klientów oraz inteligentne wsparcie w trasie dzięki integracji z AI i geolokalizacją.
 
-## 🎯 Główne Cele
-*   **Ewidencja:** Szybkie zapisywanie odwiedzonych adresów (Doręczenie/Odbiór).
-*   **Rozliczenia:** Śledzenie napiwków i podsumowania dzienne/miesięczne.
-*   **Offline First:** Działanie bez dostępu do internetu (zapis danych w LocalStorage).
-*   **Voice-to-Text:** Wykorzystanie AI do głosowego wprowadzania adresów i notatek.
+## 🚀 Główne Funkcje
 
-## 🛠 Technologia
-Aplikacja zbudowana jest w oparciu o standardy webowe, bez frameworków (Vanilla JS), co zapewnia maksymalną szybkość i kompatybilność.
+### 🎙️ Obsługa Głosowa
+- **Rozpoznawanie mowy:** Szybkie dodawanie adresów i notatek za pomocą głosu.
+- **Synteza mowy:** Komunikaty głosowe asystenta (np. potwierdzenie dodania, sugestie).
+- **Pulsowanie:** Wizualna sygnalizacja nasłuchiwania.
 
-*   **HTML5 / CSS3 (Tailwind CSS)** - Interfejs użytkownika.
-*   **JavaScript (ES6+)** - Logika aplikacji.
-*   **PWA (Manifest + Service Worker)** - Obsługa instalacji na telefonie i trybu offline.
-*   **LocalStorage** - Przechowywanie danych w pamięci przeglądarki (brak zewnętrznej bazy danych).
-*   **Leaflet / OpenStreetMap** - Wizualizacja punktów na mapie (opcjonalnie).
-*   **AI Integration** - Obsługa API (Groq, OpenAI, Gemini) do analizy mowy.
+### 🧠 Integracja AI
+- **Analiza notatek:** Inteligentne przetwarzanie dyktowanych notatek w celu wyodrębnienia adresu i instrukcji.
+- **Wsparcie wielu dostawców:**
+  - Groq (domyślny, szybki)
+  - Google Gemini
+  - OpenAI
+  - Together AI
+  - Hugging Face
 
-## 📂 Struktura Plików
+### 🗺️ Mapy i Geolokalizacja
+- **Interaktywna mapa:** Podgląd lokalizacji klienta (Leaflet + OpenStreetMap).
+- **Geokodowanie:** Automatyczna zamiana adresu na współrzędne GPS (Nominatim).
+- **Smart Assistant:** Sugerowanie klientów na podstawie aktualnej lokalizacji (Geofencing).
+- **Edycja pozycji:** Możliwość ręcznego przesuwania pinezki (Drag & Drop).
+
+### 🚗 Car Assistant
+- **Wykrywanie powrotu do auta:** Automatyczne uruchamianie nasłuchiwania po wykryciu podłączenia ładowania (Android) lub ruszenia z miejsca (GPS speed > 1.95 m/s).
+- **Wake Lock:** Zapobieganie wygaszaniu ekranu podczas pracy.
+
+### 👥 Baza Klientów
+- **Zapisywanie klientów:** Historia odwiedzonych adresów.
+- **Stałe notatki:** Kody do bram, preferencje doręczenia przypisane do adresu.
+- **Szybkie wybieranie:** Bezpośrednie połączenia telefoniczne z aplikacji.
+
+### 📍 Mój Rejon
+- **Dedykowany widok:** Zarządzanie listą ulic w rejonie w osobnej zakładce.
+- **Lista ulic:** Przejrzysta lista kafelkowa z możliwością dodawania, edycji i usuwania ulic.
+- **Weryfikacja:** System oznacza adresy spoza zdefiniowanego rejonu.
+ - **Backup rejonu:** Eksport i import listy ulic rejonu do osobnego pliku JSON.
+
+### ⚡ Analiza Trasy (Master Route)
+- **Generowanie idealnej trasy:** Algorytm analizuje całą historię dostaw i tworzy optymalny schemat kolejności ulic.
+- **Segmentacja (Jodełka):** Wykrywanie podziału ulic na segmenty (np. Ulica X 1-10 -> Ulica Y -> Ulica X 11-20).
+- **Mikro-logistyka:** Automatyczne wykrywanie kierunku poruszania się (rosnąco/malejąco) po numerach domów.
+- **Relatywny czas:** Obliczanie średniego postępu trasy dla każdego adresu (0-100%).
+
+### 📊 Statystyki i Historia
+- **Wykresy:** Wizualizacja liczby stopów i napiwków (Chart.js).
+- **Eksport danych:** Generowanie raportów CSV oraz pełny backup JSON.
+- **Historia dzienna:** Lista odwiedzonych punktów z możliwością edycji.
+
+## 🛠️ Technologie
+
+Projekt zbudowany w oparciu o nowoczesne standardy webowe (Vanilla JS):
+
+- **Frontend:** HTML5, Tailwind CSS (CDN).
+- **Logika:** JavaScript (ES6+).
+- **Mapy:** Leaflet.js.
+- **Ikony:** Lucide Icons.
+- **Wykresy:** Chart.js.
+- **PWA:** Service Worker, Web App Manifest (działa offline).
+- **Baza danych:** LocalStorage (dane przechowywane lokalnie w urządzeniu).
+
+## 📂 Struktura Projektu
 
 ```text
 z:\WWW\stopy\
-├── index.html              # Główny plik widoku aplikacji
-├── manifest.json           # Konfiguracja PWA (ikony, nazwa, kolory)
-├── sw.js                   # Service Worker (cache, offline)
 ├── css\
-│   └── style.css           # Style niestandardowe (uzupełnienie Tailwind)
+│   └── style.css       # Style globalne i poprawki dla map/mobile
 ├── js\
-│   ├── app.js              # Główna logika (UI, AI, LocalStorage, Mapa)
-│   └── tailwind-config.js  # Konfiguracja motywu kolorystycznego DPD
-└── assets\
-    └── icon.svg            # Ikona aplikacji
+│   ├── app.js          # Główna logika aplikacji (2300+ linii)
+│   └── route_analysis.js # Moduł algorytmu Analizy Trasy (Master Route)
+├── assets\             # Ikony i zasoby graficzne
+├── index.html          # Główny widok aplikacji (Single Page)
+├── manifest.json       # Konfiguracja PWA
+├── sw.js               # Service Worker (Cache & Offline)
+└── README.md           # Dokumentacja projektu
 ```
 
-## 🚀 Funkcjonalności
-
-### 1. Rejestracja Stopów (Głosowa i Ręczna)
-*   Przycisk mikrofonu pozwala podyktować adres i notatkę (np. *"Polna 5 zostawione u sąsiada 20 złotych napiwku"*).
-*   AI (lub prosty parser) analizuje tekst i wyciąga:
-    *   **Adres:** Polna 5
-    *   **Notatkę:** zostawione u sąsiada
-    *   **Napiwek:** 20.00 zł
-    *   **Typ:** Doręczenie (domyślnie) lub Odbiór.
-
-### 2. Historia i Rozliczenia
-*   Lista odwiedzonych punktów z podziałem na dni.
-*   **Podsumowanie dnia:** Liczba doręczeń, odbiorów oraz suma napiwków.
-*   Edycja i usuwanie wpisów.
-*   Eksport danych do CSV (pełna historia) oraz JSON (backup).
-
-### 3. Ustawienia i Konfiguracja
-*   Wybór dostawcy AI (Groq, OpenAI, Gemini, Together, HuggingFace).
-*   Zarządzanie kluczami API.
-*   Ustawienia motywu (Jasny/Ciemny/Auto).
-*   Zarządzanie miastem domyślnym (do geokodowania).
-*   **Always On Display:** Opcja blokady wygaszania ekranu (Wake Lock) podczas używania aplikacji.
-*   **Statystyki:** Wykresy liczby stopów i sumy napiwków z ostatnich 7 dni.
-
-### 4. Inteligentny Asystent Samochodowy (CarAssistant)
-*   **Wykrywanie silnika:** Automatyczne przypomnienie o dodaniu adresu po uruchomieniu silnika (wykrycie ładowania).
-*   **Wykrywanie ruchu:** Przypomnienie po ruszeniu z miejsca (> 7 km/h), jeśli zapomniano dodać stop.
-*   **Interakcja głosowa:** Komunikat "Dodaj adres" i automatyczne uruchomienie nasłuchiwania.
-*   **Inteligentne warunki:** Ochrona przed zbędnym uruchamianiem (sprawdzanie czasu od ostatniego wpisu).
-
-### 5. Baza Klientów
-*   **Zapis danych:** Przechowywanie stałych klientów (Imię, Telefon, Notatka) powiązanych z adresem.
-*   **Automatyzacja:** Automatyczne wykrywanie klienta przy dodawaniu stopu pod znanym adresem.
-*   **UI:** Wyświetlanie danych klienta bezpośrednio na liście stopów (wyróżnienie kolorem).
-*   **Szybki kontakt:** Przycisk "Zadzwoń" przy rozpoznanym numerze telefonu.
-*   **Zarządzanie:** Dedykowany widok do edycji i przeglądania bazy klientów.
-
-## 📦 Instalacja
+## � Instalacja
 
 ### Wymagania
-*   Serwer WWW (lokalny lub zdalny) wymagany dla Service Workera i HTTPS (wymagane dla mikrofonu na mobile).
-*   Dla testów lokalnych: `python -m http.server` lub Live Server w VS Code.
+- Przeglądarka wspierająca nowoczesne standardy (Chrome, Edge, Safari).
+- Dla pełnej funkcjonalności (Car Assistant): Android z Chrome (Battery API).
 
-### Uruchomienie
-1.  Skopiuj pliki na serwer.
-2.  Otwórz adres w przeglądarce (Chrome na Android, Safari na iOS).
-3.  **Android:** Kliknij "Dodaj do ekranu głównego" na pasku powiadomień.
-4.  **iOS:** Kliknij "Udostępnij" -> "Do ekranu początkowego".
+### Uruchomienie lokalne
+Ze względu na politykę bezpieczeństwa przeglądarek (CORS, moduły), aplikacja powinna być serwowana przez serwer HTTP, a nie bezpośrednio z pliku.
 
-## 🔒 Bezpieczeństwo Danych
-*   Wszystkie dane (adresy, klucze API) są przechowywane **lokalnie** na urządzeniu użytkownika (LocalStorage).
-*   Aplikacja nie wysyła danych na zewnętrzne serwery (poza zapytaniami do wybranych API AI i geokodowania).
-*   Zalecane jest regularne robienie **Backupu** (Ustawienia -> Eksportuj backup).
+```bash
+# Przykład z Python
+python -m http.server 8000
+```
+Następnie otwórz `http://localhost:8000` w przeglądarce.
 
-## 🔄 Historia Zmian
-*   **Refaktoryzacja:** Podział monolitu na strukturę modułową (css/js).
-*   **Raportowanie:** Dodano eksport pełnej historii do CSV.
-*   **UX:** Dodano podsumowania finansowe (napiwki) bezpośrednio na liście historii.
-*   **System:** Dodano obsługę Screen Wake Lock API (blokada wygaszania ekranu).
-*   **Smart:** Dodano moduł CarAssistant wykrywający powrót do auta (ładowanie) i ruch (GPS) w celu automatycznego wywołania zapisu.
-*   **UI:** Wydzielono zaawansowane ustawienia AI do dedykowanej podstrony.
-*   **Fix (iOS):** Naprawiono widoczność checkboxów w ustawieniach na iPhone (problem ze stylami systemowymi).
-*   **Moduł:** Dodano Bazę Klientów z automatycznym rozpoznawaniem adresów, stałymi notatkami i szybkim wybieraniem numeru.
-*   **Fix (Voice):** Naprawiono potwierdzenia głosowe (TTS) na iOS (dodano "warm-up" syntezatora) i Chrome.
+### Instalacja jako Aplikacja (PWA)
+1. Otwórz stronę w przeglądarce na telefonie.
+2. Wybierz opcję "Dodaj do ekranu głównego" (Add to Home Screen).
+3. Aplikacja zainstaluje się jako natywna aplikacja systemowa.
+
+## ⚙️ Konfiguracja AI
+
+Aby korzystać z funkcji AI, przejdź do Ustawień AI i wybierz dostawcę:
+1. **Groq:** Wymaga klucza API (szybki, darmowy limit).
+2. **Gemini:** Wymaga klucza Google AI Studio.
+3. **OpenAI:** Wymaga płatnego klucza API.
+
+## 🔒 Prywatność
+
+Aplikacja działa w modelu **Local-First**. Wszystkie dane (klienci, historia, ustawienia) są przechowywane w pamięci przeglądarki (LocalStorage) i nie są wysyłane na żaden zewnętrzny serwer (poza zapytaniami do API AI i Geocodingu, które są anonimizowane w miarę możliwości).
+
+---
+Autor: DPD Stopy Dev Team
+Ostatnia aktualizacja: Styczeń 2026

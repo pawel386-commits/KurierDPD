@@ -9,6 +9,29 @@ const config = JSON.parse(localStorage.getItem('dpd_config_v12') || JSON.stringi
     name: "", stopWord: "notatka", theme: "auto", gpsEnabled: true, city: "", geminiKey: "", aiEnabled: true, geminiModel: "", aiProvider: "groq", wakeLockEnabled: false, carAssistantEnabled: false, voiceConfirmationEnabled: false, smartAssistantEnabled: false, proximityRadius: 40
 }));
 
+let myAreaStreets = [];
+try { myAreaStreets = JSON.parse(localStorage.getItem('myAreaStreets') || '[]'); } catch(e) { myAreaStreets = []; }
+let myAreaEditIndex = -1;
+
+window.getMyAreaStreets = function() {
+    return Array.isArray(myAreaStreets) ? myAreaStreets : [];
+};
+
+window.normalizeStreetName = function(address) {
+    if (!address) return "";
+    const text = String(address).trim();
+    const match = text.match(/^(.+?)(\d)/);
+    const street = match ? match[1] : text;
+    return street.replace(/\s+/g, " ").trim().toUpperCase();
+};
+
+window.isAddressInMyArea = function(address) {
+    const street = window.normalizeStreetName(address);
+    if (!street) return false;
+    const list = window.getMyAreaStreets();
+    return list.indexOf(street) !== -1;
+};
+
 // System prompt dla AI
 const aiSystemPrompt = `Jesteś asystentem kuriera DPD pracującego w Polsce. Otrzymujesz tekst podyktowany głosowo przez kuriera, który może zawierać błędy transkrypcji. Twoim zadaniem jest wyodrębnić z tego tekstu następujące informacje i zwrócić je w formacie JSON:
 
@@ -165,11 +188,18 @@ window.saveEdit = function() {
 
 // --- CUSTOMER DATABASE ---
 
+window.addNewCustomer = function() {
+    window.openCustomerModal(null);
+};
+
 window.openCustomerModal = function(addressOrId) {
     let customer = null;
     let address = "";
+    let isNewManual = false;
     
-    if (typeof addressOrId === 'string') {
+    if (addressOrId === null) {
+        isNewManual = true;
+    } else if (typeof addressOrId === 'string') {
         // Mode: Add/Edit from Stop
         address = addressOrId;
         customer = customers.find(c => c.address === address);
@@ -179,7 +209,24 @@ window.openCustomerModal = function(addressOrId) {
         if (customer) address = customer.address;
     }
 
-    document.getElementById('custAddress').value = address;
+    const addrInput = document.getElementById('custAddress');
+    addrInput.value = address;
+    const cityInput = document.getElementById('custCity');
+    const defaultCity = (customer && customer.city) ? customer.city : (config.city || "");
+    if (cityInput) cityInput.value = defaultCity;
+    
+    // Handle Readonly State
+    if (isNewManual) {
+        addrInput.removeAttribute('readonly');
+        addrInput.classList.remove('opacity-60');
+        addrInput.placeholder = "Wpisz adres...";
+        document.getElementById('customerModalTitle').textContent = "Nowy Klient";
+    } else {
+        addrInput.setAttribute('readonly', 'true');
+        addrInput.classList.add('opacity-60');
+        document.getElementById('customerModalTitle').textContent = customer ? "Edycja Klienta" : "Dodaj Klienta";
+    }
+
     document.getElementById('custName').value = customer ? customer.name : "";
     document.getElementById('custPhone').value = customer ? customer.phone : "";
     document.getElementById('custNote').value = customer ? customer.static_note : "";
@@ -203,9 +250,15 @@ window.openCustomerModal = function(addressOrId) {
         delBtn.classList.add('hidden');
     }
 
-    document.getElementById('customerModal').classList.add('modal-active');
+    const modal = document.getElementById('customerModal');
+    modal.setAttribute('data-mode', customer ? 'edit' : 'add');
+    modal.classList.add('modal-active');
     setTimeout(() => {
-        document.getElementById('custName').focus();
+        if (isNewManual) {
+            addrInput.focus();
+        } else {
+            document.getElementById('custName').focus();
+        }
         
         // Initialize Map
         if (!customerMap) {
@@ -251,9 +304,15 @@ window.closeCustomerModal = () => document.getElementById('customerModal').class
 
 window.saveCustomer = async function() {
     const address = document.getElementById('custAddress').value;
+    const city = document.getElementById('custCity').value.trim() || (config.city || "");
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
     const note = document.getElementById('custNote').value.trim();
+
+    if (!address) {
+        window.showToast("Podaj adres klienta", "alert-circle", "text-red-500");
+        return;
+    }
 
     if (!name) {
         window.showToast("Podaj nazwę klienta", "alert-circle", "text-red-500");
@@ -261,9 +320,20 @@ window.saveCustomer = async function() {
     }
 
     const existingIdx = customers.findIndex(c => c.address === address);
+    
+    // Validation: Uniqueness check
+    const modal = document.getElementById('customerModal');
+    const mode = modal.getAttribute('data-mode');
+    
+    // Jeśli tryb 'add' (nowy klient) i adres już istnieje -> Błąd
+    if (mode === 'add' && existingIdx !== -1) {
+        window.showToast("Klient o tym adresie już istnieje!", "alert-circle", "text-red-500");
+        return;
+    }
     const newCustomer = {
         id: existingIdx !== -1 ? customers[existingIdx].id : Date.now(),
         address: address,
+        city: city,
         name: name,
         phone: phone,
         static_note: note
@@ -274,11 +344,11 @@ window.saveCustomer = async function() {
         const pos = customerMarker.getLatLng();
         newCustomer.lat = pos.lat;
         newCustomer.lng = pos.lng;
-    } else if (config.gpsEnabled && address) {
+    } else if (address) {
         // Try to geocode if no marker set (fallback)
         try {
              window.showToast("Geokodowanie...", "map-pin", "text-blue-500");
-             const coords = await window.geocodeAddress(address);
+             const coords = await window.geocodeAddress(address, city);
              if (coords) {
                  newCustomer.lat = coords.lat;
                  newCustomer.lng = coords.lng;
@@ -410,6 +480,45 @@ window.setAIStatusUI = function() {
     }
 };
 
+window.setChargingStatusUI = function(state) {
+    const dot = document.getElementById('chargeDot');
+    const label = document.getElementById('chargeText');
+    if (!dot || !label) return;
+    if (state === 'on') {
+        dot.className = "w-1.5 h-1.5 bg-green-500 rounded-full transition-colors";
+        label.textContent = "Ładowanie: ON";
+    } else if (state === 'off') {
+        dot.className = "w-1.5 h-1.5 bg-red-500 rounded-full transition-colors";
+        label.textContent = "Ładowanie: OFF";
+    } else {
+        dot.className = "w-1.5 h-1.5 bg-gray-500 rounded-full transition-colors";
+        label.textContent = "Ładowanie: BRAK DANYCH";
+    }
+};
+
+window.initChargingIndicator = function() {
+    window.setChargingStatusUI('unknown');
+    if (!('getBattery' in navigator)) return;
+    navigator.getBattery().then(battery => {
+        const update = () => {
+            if (typeof battery.charging === 'boolean') {
+                window.setChargingStatusUI(battery.charging ? 'on' : 'off');
+            } else {
+                window.setChargingStatusUI('unknown');
+            }
+        };
+        update();
+        if (typeof battery.addEventListener === 'function') {
+            battery.addEventListener('chargingchange', update);
+        } else if ('onchargingchange' in battery) {
+            battery.onchargingchange = update;
+        }
+    }).catch(e => {
+        console.log('Battery indicator error:', e);
+        window.setChargingStatusUI('unknown');
+    });
+};
+
 window.setUIProcessing = function(proc) {
     isProcessingAI = proc;
     const b = document.getElementById('micBtn');
@@ -470,12 +579,175 @@ window.updateCityFromGps = function() {
     });
 };
 
-window.geocodeAddress = async function(addr) {
+let citySuggestionItems = [];
+
+window.renderCitySuggestions = function(items) {
+    const box = document.getElementById('setCitySuggestions');
+    if (!box) return;
+    citySuggestionItems = items || [];
+    if (!items || items.length === 0) {
+        box.innerHTML = "";
+        box.classList.add('hidden');
+        return;
+    }
+    box.innerHTML = items.map((item, idx) => {
+        const addr = item.address || {};
+        const cityName = addr.city || addr.town || addr.village || (item.display_name || '').split(',')[0];
+        const region = addr.state || addr.county || "";
+        const display = region ? `${cityName} (${region})` : cityName;
+        return `<button type="button" data-idx="${idx}" class="w-full text-left px-3 py-1.5 text-[11px] hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center gap-2">
+                    <span class="font-bold">${cityName}</span>
+                    <span class="text-[10px] opacity-70 truncate">${region}</span>
+                </button>`;
+    }).join('');
+    box.classList.remove('hidden');
+};
+
+window.searchCitySuggestions = async function(query) {
+    query = (query || '').trim();
+    if (!query || query.length < 2) {
+        window.renderCitySuggestions([]);
+        return;
+    }
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=pl&featuretype=settlement&limit=8&q=${encodeURIComponent(query)}&accept-language=pl`;
+        const res = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        if (!res.ok) {
+            window.renderCitySuggestions([]);
+            return;
+        }
+        const data = await res.json();
+        window.renderCitySuggestions(Array.isArray(data) ? data : []);
+    } catch (e) {
+        console.error('City autocomplete error:', e);
+        window.renderCitySuggestions([]);
+    }
+};
+
+window.initCityAutocomplete = function() {
+    const input = document.getElementById('setCity');
+    const box = document.getElementById('setCitySuggestions');
+    if (!input || !box) return;
+    const debouncedSearch = debounce((val) => window.searchCitySuggestions(val), 300);
+    input.addEventListener('input', () => {
+        const val = input.value.trim();
+        if (val.length < 2) {
+            window.renderCitySuggestions([]);
+            return;
+        }
+        debouncedSearch(val);
+    });
+    input.addEventListener('blur', () => {
+        setTimeout(() => window.renderCitySuggestions([]), 200);
+    });
+    box.addEventListener('mousedown', (e) => {
+        const btn = e.target.closest('button[data-idx]');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        const item = citySuggestionItems[idx];
+        if (!item) return;
+        const addr = item.address || {};
+        const cityName = addr.city || addr.town || addr.village || (item.display_name || '').split(',')[0];
+        if (!cityName) return;
+        input.value = cityName;
+        config.city = cityName;
+        localStorage.setItem('dpd_config_v12', JSON.stringify(config));
+        window.renderCitySuggestions([]);
+        sunTimes = null;
+        window.refreshTheme();
+    });
+};
+
+window.renderMyAreaStreets = function() {
+    const container = document.getElementById('myAreaList');
+    if (!container) return;
+    if (!myAreaStreets || myAreaStreets.length === 0) {
+        container.innerHTML = "";
+        return;
+    }
+    container.innerHTML = myAreaStreets.map((name, idx) => {
+        return `<div class="w-full inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-dpd-red dark:text-red-300 px-3 py-1 rounded-full text-[11px] font-bold">
+                    <span class="truncate flex-1">${name}</span>
+                    <button type="button" onclick="window.editMyAreaStreet(${idx})" class="p-0.5 opacity-70 hover:opacity-100">
+                        <i data-lucide="pencil" class="w-3 h-3"></i>
+                    </button>
+                    <button type="button" onclick="window.deleteMyAreaStreet(${idx})" class="p-0.5 opacity-70 hover:opacity-100">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </button>
+                </div>`;
+    }).join('');
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+};
+
+window.addMyAreaStreet = function() {
+    const input = document.getElementById('myAreaInput');
+    const btn = document.getElementById('myAreaAddBtn');
+    if (!input) return;
+    const raw = input.value || "";
+    let value = raw.replace(/\s+/g, " ").trim();
+    if (!value) return;
+    const normalized = value.toUpperCase();
+    const list = window.getMyAreaStreets();
+    if (list.indexOf(normalized) !== -1 && myAreaEditIndex === -1) {
+        window.showToast("Ta ulica jest już na liście", "alert-circle", "text-yellow-500");
+        return;
+    }
+    if (myAreaEditIndex >= 0 && myAreaEditIndex < myAreaStreets.length) {
+        myAreaStreets[myAreaEditIndex] = normalized;
+    } else {
+        myAreaStreets.push(normalized);
+    }
+    localStorage.setItem('myAreaStreets', JSON.stringify(myAreaStreets));
+    input.value = "";
+    myAreaEditIndex = -1;
+    if (btn) btn.textContent = "Dodaj";
+    window.renderMyAreaStreets();
+};
+
+window.editMyAreaStreet = function(index) {
+    const input = document.getElementById('myAreaInput');
+    const btn = document.getElementById('myAreaAddBtn');
+    if (!input) return;
+    if (index < 0 || index >= myAreaStreets.length) return;
+    input.value = myAreaStreets[index];
+    myAreaEditIndex = index;
+    if (btn) btn.textContent = "Zapisz";
+    input.focus();
+    try {
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+    } catch(e) {}
+};
+
+window.deleteMyAreaStreet = function(index) {
+    const btn = document.getElementById('myAreaAddBtn');
+    const input = document.getElementById('myAreaInput');
+    if (index < 0 || index >= myAreaStreets.length) return;
+    myAreaStreets.splice(index, 1);
+    localStorage.setItem('myAreaStreets', JSON.stringify(myAreaStreets));
+    if (myAreaEditIndex === index) {
+        myAreaEditIndex = -1;
+        if (btn) btn.textContent = "Dodaj";
+        if (input) input.value = "";
+    } else if (myAreaEditIndex > index) {
+        myAreaEditIndex -= 1;
+    }
+    window.renderMyAreaStreets();
+};
+
+window.geocodeAddress = async function(addr, customCity) {
     const search = addr.split('/')[0].trim();
     if (!search) return null;
     
     // Sprawdź cache
-    const cacheKey = `${search.toLowerCase()}_${(config.city || '').toLowerCase()}`;
+    const city = (customCity || config.city || '').trim();
+    const cacheKey = `${search.toLowerCase()}_${city.toLowerCase()}`;
     if (geocodeCache[cacheKey]) {
         return geocodeCache[cacheKey];
     }
@@ -491,7 +763,7 @@ window.geocodeAddress = async function(addr) {
     }
     
     let q = encodeURIComponent(search);
-    if (config.city) q += encodeURIComponent(`, ${config.city}`);
+    if (city) q += encodeURIComponent(`, ${city}`);
     
     try {
         // Rate limiting - Nominatim wymaga max 1 req/s
@@ -741,6 +1013,10 @@ window.callAIProvider = async function(provider, apiKey, text) {
             
         case 'together':
             try {
+                const areaList = window.getMyAreaStreets();
+                const extraHint = areaList && areaList.length
+                    ? `\nLista ulic w rejonie kuriera (traktuj je jako pewne, nie szukaj innych podobnych nazw w mieście): ${areaList.join(', ')}`
+                    : "";
                 const res = await fetch('https://api.together.xyz/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -751,7 +1027,7 @@ window.callAIProvider = async function(provider, apiKey, text) {
                         model: 'meta-llama/Llama-3-70b-chat-hf',
                         messages: [
                             { role: 'system', content: systemPrompt },
-                            { role: 'user', content: `Tekst podyktowany przez kuriera: "${text}"` }
+                            { role: 'user', content: `Tekst podyktowany przez kuriera: "${text}"${extraHint}` }
                         ],
                         response_format: { type: 'json_object' }
                     })
@@ -769,6 +1045,10 @@ window.callAIProvider = async function(provider, apiKey, text) {
             
         case 'openai':
             try {
+                const areaList = window.getMyAreaStreets();
+                const extraHint = areaList && areaList.length
+                    ? `\nLista ulic w rejonie kuriera (traktuj je jako pewne, nie szukaj innych podobnych nazw w mieście): ${areaList.join(', ')}`
+                    : "";
                 const res = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -779,7 +1059,7 @@ window.callAIProvider = async function(provider, apiKey, text) {
                         model: 'gpt-3.5-turbo',
                         messages: [
                             { role: 'system', content: systemPrompt },
-                            { role: 'user', content: `Tekst podyktowany przez kuriera: "${text}"` }
+                            { role: 'user', content: `Tekst podyktowany przez kuriera: "${text}"${extraHint}` }
                         ],
                         response_format: { type: 'json_object' }
                     })
@@ -797,6 +1077,10 @@ window.callAIProvider = async function(provider, apiKey, text) {
             
         case 'huggingface':
             try {
+                const areaList = window.getMyAreaStreets();
+                const extraHint = areaList && areaList.length
+                    ? `\nLista ulic w rejonie kuriera (traktuj je jako pewne, nie szukaj innych podobnych nazw w mieście): ${areaList.join(', ')}`
+                    : "";
                 const res = await fetch('https://api-inference.huggingface.co/models/meta-llama/Llama-3-70b-chat-hf', {
                     method: 'POST',
                     headers: {
@@ -804,7 +1088,7 @@ window.callAIProvider = async function(provider, apiKey, text) {
                         'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        inputs: `System: ${systemPrompt}\n\nUser: Tekst podyktowany przez kuriera: "${text}"\n\nAssistant:`,
+                        inputs: `System: ${systemPrompt}\n\nUser: Tekst podyktowany przez kuriera: "${text}"${extraHint}\n\nAssistant:`,
                         parameters: { return_full_text: false, max_new_tokens: 200 }
                     })
                 });
@@ -829,11 +1113,15 @@ window.callAIProvider = async function(provider, apiKey, text) {
             
             for (const modelName of modelsToTry) {
                 try {
+                    const areaList = window.getMyAreaStreets();
+                    const extraHint = areaList && areaList.length
+                        ? `\nLista ulic w rejonie kuriera (traktuj je jako pewne, nie szukaj innych podobnych nazw w mieście): ${areaList.join(', ')}`
+                        : "";
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `Tekst podyktowany przez kuriera: "${text}"` }] }],
+                            contents: [{ parts: [{ text: `Tekst podyktowany przez kuriera: "${text}"${extraHint}` }] }],
                             systemInstruction: { parts: [{ text: systemPrompt }] },
                             generationConfig: { responseMimeType: 'application/json' }
                         })
@@ -1170,6 +1458,99 @@ if (!platform.hasSpeechRecognition) {
 }
 
 // --- ZAPIS I RENDER ---
+window.liczbaNaSlowo = function(n) {
+    let numStr = String(n).trim();
+    let suffix = "";
+    
+    // Sprawdź czy jest litera na końcu (np. "131G")
+    const match = numStr.match(/^(\d+)([a-zA-Z])$/);
+    if (match) {
+        numStr = match[1];
+        const letter = match[2].toUpperCase();
+        const lettersMap = {
+            'A': ' a', 'B': ' be', 'C': ' ce', 'D': ' de', 'E': ' e', 'F': ' ef', 'G': ' gie',
+            'H': ' ha', 'I': ' i', 'J': ' jot', 'K': ' ka', 'L': ' el', 'M': ' em', 'N': ' en',
+            'O': ' o', 'P': ' pe', 'R': ' er', 'S': ' es', 'T': ' te', 'U': ' u', 'W': ' wu',
+            'Y': ' igrek', 'Z': ' zet'
+        };
+        if (lettersMap[letter]) {
+            suffix = lettersMap[letter];
+        } else {
+            suffix = " " + letter.toLowerCase();
+        }
+    }
+
+    let num = parseInt(numStr, 10);
+    if (isNaN(num) || num < 0 || num > 999) return String(n); // Jeśli to nie liczba (lub poza zakresem), zwróć oryginał
+    
+    const ones = ["zero", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
+    const teens = {
+        10: "dziesięć", 11: "jedenaście", 12: "dwanaście", 13: "trzynaście", 14: "czternaście",
+        15: "piętnaście", 16: "szesnaście", 17: "siedemnaście", 18: "osiemnaście", 19: "dziewiętnaście"
+    };
+    const tens = ["", "dziesięć", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
+    const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
+    
+    let words = "";
+    if (num < 10) words = ones[num];
+    else if (num >= 10 && num < 20) words = teens[num];
+    else if (num < 100) {
+        const t = Math.floor(num / 10);
+        const u = num % 10;
+        words = tens[t] + (u > 0 ? " " + ones[u] : "");
+    } else {
+        const h = Math.floor(num / 100);
+        const rest = num % 100;
+        words = hundreds[h];
+        if (rest > 0) {
+            if (rest < 10) words += " " + ones[rest];
+            else if (rest >= 10 && rest < 20) words += " " + teens[rest];
+            else {
+                const t2 = Math.floor(rest / 10);
+                const u2 = rest % 10;
+                words += " " + tens[t2];
+                if (u2 > 0) words += " " + ones[u2];
+            }
+        }
+    }
+    
+    return words + suffix;
+};
+
+window.formatAddressForSpeech = function(address) {
+    if (!address) return "";
+    let formatted = address.trim();
+    
+    // 1. Zamień nazwy ulic zaczynające się od cyfry na słowa (np. 3 Maja -> Trzeciego Maja)
+    const numberWords = {
+        "1": "Pierwszego", "2": "Drugiego", "3": "Trzeciego", "4": "Czwartego", 
+        "5": "Piątego", "6": "Szóstego", "7": "Siódmego", "8": "Ósmego", 
+        "9": "Dziewiątego", "10": "Dziesiątego", "11": "Jedenastego", 
+        "15": "Piętnastego", "17": "Siedemnastego", "29": "Dwudziestego Dziewiątego",
+        "30": "Trzydziestego", "31": "Trzydziestego Pierwszego"
+    };
+    
+    const startMatch = formatted.match(/^(\d+)(\s+.*)/);
+    if (startMatch && numberWords[startMatch[1]]) {
+        formatted = numberWords[startMatch[1]] + startMatch[2];
+    }
+    
+    // 2. Wstaw przecinek przed numerem domu (oddzielenie ulicy od numeru)
+    // Szukamy spacji przed cyfrą, gdzie wcześniej nie było cyfry
+    formatted = formatted.replace(/([^\d])\s+(\d)/g, "$1, $2");
+    
+    // 3. Zamień "/" na " przez " (musi być po kroku 2, żeby nie wstawiać przecinka przed 3 w "102/3")
+    formatted = formatted.replace(/\//g, " przez ");
+    
+    // 4. Zamień liczby (i liczby z literami np. 131G) na słowa
+    // Regex łapie ciągi cyfr, opcjonalnie z jedną literą na końcu
+    formatted = formatted.replace(/\b\d+[a-zA-Z]?\b/g, function(match) {
+        return window.liczbaNaSlowo(match);
+    });
+    
+    return formatted;
+};
+
 window.addEntry = function(addr, note = "", type = 'delivery', tip = 0, isAuto = false) {
     if (!addr || addr.trim().length < 2) return;
     
@@ -1184,16 +1565,25 @@ window.addEntry = function(addr, note = "", type = 'delivery', tip = 0, isAuto =
         normalizedAddr = normalizedAddr.charAt(0).toUpperCase() + normalizedAddr.slice(1);
     }
     
+    // 1. Połącz cyfrę i literę (usuń spację): "131 g" -> "131g"
+    normalizedAddr = normalizedAddr.replace(/(\d+)\s+([a-zA-Z])(?!\w)/g, '$1$2');
+    
+    // 2. Zamień litery przy liczbach na wielkie: "131g" -> "131G"
+    normalizedAddr = normalizedAddr.replace(/(\d+)([a-zA-Z])/g, function(match, num, letter) {
+        return num + letter.toUpperCase();
+    });
+    
     // Upewnij się że tip jest liczbą
     const tipValue = parseFloat(tip) || 0;
     
+    const inMyArea = window.isAddressInMyArea(normalizedAddr);
     const entry = {
         id: Date.now(),
         time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
         date: getTodayStr(),
         address: normalizedAddr,
         note: (note || "").trim(),
-        tip: tipValue, type, lat: null, lng: null
+        tip: tipValue, type, lat: null, lng: null, outOfArea: !inMyArea
     };
     addresses.unshift(entry);
     window.saveAndRender();
@@ -1203,7 +1593,8 @@ window.addEntry = function(addr, note = "", type = 'delivery', tip = 0, isAuto =
     // Voice Confirmation
     if (config.voiceConfirmationEnabled && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        let msg = `Dodano ${type === 'pickup' ? 'odbiór' : 'doręczenie'} pod adresem ${entry.address}.`;
+        const formattedAddr = window.formatAddressForSpeech(entry.address);
+        let msg = `Dodano ${type === 'pickup' ? 'odbiór' : 'doręczenie'} pod adresem ${formattedAddr}.`;
         if (tipValue > 0) {
             msg += ` Napiwek ${tipValue} złotych.`;
         }
@@ -1212,7 +1603,8 @@ window.addEntry = function(addr, note = "", type = 'delivery', tip = 0, isAuto =
         }
         const utterance = new SpeechSynthesisUtterance(msg);
         utterance.lang = 'pl-PL';
-        utterance.rate = 1.1;
+        utterance.rate = 0.88;
+        utterance.pitch = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
@@ -1251,6 +1643,7 @@ window.saveAndRender = function() {
                         <div class="flex-1 min-w-0">
                             <span class="text-[10px] font-black uppercase opacity-60 text-left block">${item.type === 'pickup' ? 'Odbiór' : 'Doręczenie'} ${item.time}</span>
                             <p class="text-base font-bold mt-1 text-left pr-2 break-words">${item.address}</p>
+                            ${item.outOfArea ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full border border-orange-300 bg-orange-50 text-[10px] font-black uppercase text-orange-700 dark:border-orange-500/60 dark:bg-orange-900/30 dark:text-orange-200 mt-1">Poza rejonem</span>` : ''}
                         </div>
                         <div class="flex gap-1 shrink-0 text-left">
                             <button onclick="window.toggleType(${item.id})" class="p-1 opacity-40 hover:opacity-100"><i data-lucide="${item.type === 'pickup' ? 'package-plus' : 'truck'}" class="w-4 h-4 text-left"></i></button>
@@ -1287,7 +1680,7 @@ window.saveAndRender = function() {
 
 // --- MAPA & HISTORIA ---
 window.toggleView = function(v) {
-    ['listView', 'mapView', 'settingsView', 'statsView', 'aiSettingsView', 'customersView', 'historyView'].forEach(id => {
+    ['listView', 'mapView', 'settingsView', 'statsView', 'aiSettingsView', 'customersView', 'historyView', 'myAreaView', 'routeAnalysisView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('view-hidden');
     });
@@ -1322,6 +1715,10 @@ window.toggleView = function(v) {
     if (v === 'customers') {
         setTimeout(window.renderCustomersList, 100);
     }
+
+    if (v === 'routeAnalysis') {
+        setTimeout(window.renderMasterRoute, 100);
+    }
     
     lucide.createIcons();
 };
@@ -1330,18 +1727,29 @@ const WakeLockManager = {
     wakeLock: null,
     wakeVideo: null,
 
+    createVideoElement: function() {
+        if (this.wakeVideo) return;
+        this.wakeVideo = document.createElement('video');
+        this.wakeVideo.setAttribute('playsinline', '');
+        this.wakeVideo.setAttribute('webkit-playsinline', ''); // for iOS 10+
+        this.wakeVideo.setAttribute('no-widget', '');
+        this.wakeVideo.setAttribute('loop', '');
+        this.wakeVideo.setAttribute('muted', '');
+        this.wakeVideo.setAttribute('hidden', '');
+        
+        // Valid blank 1x1 MP4 video base64
+        this.wakeVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAQAAAAAYbW9vdgAAAGxtdmhkAAAAAAAZN4QAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAGGlvZHMAAAAAEICAgAcAT////3//AAACQXRyYWsAAAXjAAAAMHRraGQAAAABAAAAAQAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAABAAAAAAHgbWRpYQAAACBtZGlhAAAAIG1kaGQAAAAAABk3hAAAAAAAAAAAAAEAAAAAAAARaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAAAAAAGWbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAABVnN0YmwAAACpc3RzZAAAAAAAAAABAAAAmWF2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAQABAAAAAAAIAAAACAAAAAAAAAAAAAAAEAVjZmZyAAAADkFhY2xpbjEuMC4xAAACAGF2Y0MBAAAALgECA/8AIF9iA/8AIf8LAAAADAECA/8AAQAaYXNsAAAAAAABAAAAAAB4AAAAPmN0dHMAAAAAAAAACAAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAA3N0dHMAAAAAAAAAAQAAAA0AAAABAAAAFHN0c3oAAAAAAAAAEAAAAAIAAAABc3RzYwAAAAAAAAABAAAAAQAAAA0AAAABAAAAFHN0Y28AAAAAAAAAAQAAAEYAAAAYdHJheQAAAABraGlkAAAAAQAACAAAAAB1ZHRhAAAAZ21ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguMjkuMTAw';
+        
+        // Fallback for Safari which is picky about base64 src in video
+        this.wakeVideo.type = 'video/mp4';
+        
+        document.body.appendChild(this.wakeVideo);
+    },
+
     toggle: async function(enabled) {
         // Video Loop Hack (for iOS/Android background execution)
         if (!this.wakeVideo) {
-            this.wakeVideo = document.createElement('video');
-            this.wakeVideo.setAttribute('playsinline', '');
-            this.wakeVideo.setAttribute('no-widget', '');
-            this.wakeVideo.setAttribute('loop', '');
-            this.wakeVideo.setAttribute('muted', '');
-            this.wakeVideo.setAttribute('hidden', '');
-            // Tiny blank mp4
-            this.wakeVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAQAAAAAYbW9vdgAAAGxtdmhkAAAAAAAZN4QAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAGGlvZHMAAAAAEICAgAcAT////3//AAACQXRyYWsAAAXjAAAAMHRraGQAAAABAAAAAQAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAABAAAAAAHgbWRpYQAAACBtZGlhAAAAIG1kaGQAAAAAABk3hAAAAAAAAAAAAAEAAAAAAAARaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAAAAAAGWbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAABVnN0YmwAAACpc3RzZAAAAAAAAAABAAAAmWF2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAQABAAAAAAAIAAAACAAAAAAAAAAAAAAAEAVjZmZyAAAADkFhY2xpbjEuMC4xAAACAGF2Y0MBAAAALgECA/8AIF9iA/8AIf8LAAAADAECA/8AAQAaYXNsAAAAAAABAAAAAAB4AAAAPmN0dHMAAAAAAAAACAAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAA3N0dHMAAAAAAAAAAQAAAA0AAAABAAAAFHN0c3oAAAAAAAAAEAAAAAIAAAABc3RzYwAAAAAAAAABAAAAAQAAAA0AAAABAAAAFHN0Y28AAAAAAAAAAQAAAEYAAAAYdHJheQAAAABraGlkAAAAAQAACAAAAAB1ZHRhAAAAZ21ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguMjkuMTAw';
-            document.body.appendChild(this.wakeVideo);
+            this.createVideoElement();
         }
 
         if (enabled) {
@@ -1386,6 +1794,34 @@ const WakeLockManager = {
         const wakeText = document.getElementById('wakeText');
         if (wakeDot) wakeDot.className = `w-1.5 h-1.5 ${active ? 'bg-green-500' : 'bg-red-500'} rounded-full transition-colors`;
         if (wakeText) wakeText.textContent = active ? "Blokada: Wł" : "Blokada: Wył";
+    },
+
+    init: function() {
+        // Create video element proactively
+        if (!this.wakeVideo) {
+            this.createVideoElement();
+        }
+        
+        // Setup first interaction listener to unlock audio/video context
+        const unlock = async () => {
+            if (this.wakeVideo) {
+                try {
+                    await this.wakeVideo.play();
+                    if (!this.wakeLock) { 
+                        // If not enabled, pause immediately. 
+                        // If enabled, keep playing (loop)
+                        const isEnabled = document.getElementById('wakeDot')?.classList.contains('bg-green-500');
+                        if (!isEnabled) this.wakeVideo.pause();
+                    }
+                } catch(e) {
+                    console.log('Autoplay unlock failed', e);
+                }
+            }
+            document.removeEventListener('click', unlock);
+            document.removeEventListener('touchstart', unlock);
+        };
+        document.addEventListener('click', unlock);
+        document.addEventListener('touchstart', unlock);
     }
 };
 
@@ -1788,6 +2224,66 @@ window.clearGeocodeCache = () => {
     }
 };
 
+window.exportMyAreaBackup = () => {
+    const list = window.getMyAreaStreets();
+    if (!list || !list.length) {
+        window.showToast("Brak ulic w rejonie do eksportu", "file-x", "text-yellow-500");
+        return;
+    }
+    const backup = {
+        type: 'myAreaStreets',
+        version: '1.0',
+        date: new Date().toISOString(),
+        streets: list
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `DPD_MyArea_${getTodayStr().replace(/\./g, '_')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.showToast("Eksportowano rejon", "download", "text-green-500");
+};
+
+window.importMyAreaBackup = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data && Array.isArray(data.streets)) {
+                if (data.type && data.type !== 'myAreaStreets') {
+                    window.showToast("Niewłaściwy typ pliku backupu", "alert-triangle", "text-red-500");
+                } else {
+                    const count = data.streets.length;
+                    if (count === 0) {
+                        window.showToast("Backup nie zawiera ulic", "file-x", "text-yellow-500");
+                    } else if (confirm(`Zaimportować ${count} ulic do rejonu? Obecna lista zostanie zastąpiona.`)) {
+                        myAreaStreets = data.streets.map(s => String(s).toUpperCase());
+                        localStorage.setItem('myAreaStreets', JSON.stringify(myAreaStreets));
+                        myAreaEditIndex = -1;
+                        const btn = document.getElementById('myAreaAddBtn');
+                        const input = document.getElementById('myAreaInput');
+                        if (btn) btn.textContent = "Dodaj";
+                        if (input) input.value = "";
+                        window.renderMyAreaStreets();
+                        window.showToast("Zaimportowano rejon", "upload", "text-green-500");
+                    }
+                }
+            } else {
+                window.showToast("Nieprawidłowy format backupu rejonu", "alert-triangle", "text-red-500");
+            }
+        } catch (err) {
+            window.showToast("Błąd importu rejonu", "x", "text-red-500");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+};
+
 // --- CAR ASSISTANT (INTELIGENTNE WYKRYWANIE) ---
 const CarAssistant = {
     batteryListener: null,
@@ -1812,18 +2308,22 @@ const CarAssistant = {
         this.active = true;
         console.log('CarAssistant: Starting...');
 
-        // 1. Battery Status API
         if ('getBattery' in navigator) {
             navigator.getBattery().then(battery => {
                 this.lastChargeState = battery.charging;
-                // Save reference to remove listener if needed (though battery api doesn't support removeEventListener easily for anonymous functions)
-                this.batteryHandler = () => this.handleChargingChange(battery.charging);
-                battery.addEventListener('chargingchange', this.batteryHandler);
+                const handler = () => this.handleChargingChange(battery.charging);
+                this.batteryHandler = handler;
+                if (typeof battery.addEventListener === 'function') {
+                    battery.addEventListener('chargingchange', handler);
+                } else if ('onchargingchange' in battery) {
+                    battery.onchargingchange = handler;
+                } else {
+                    console.log('CarAssistant: Battery API has no chargingchange listener');
+                }
                 console.log('CarAssistant: Battery listener initialized', battery.charging);
             }).catch(e => console.log('Battery API error:', e));
         }
         
-        // 2. Movement Detection (Geolocation)
         if (platform.hasGeolocation) {
             this.watchId = navigator.geolocation.watchPosition(
                 (pos) => this.handleMovement(pos),
@@ -1908,7 +2408,8 @@ const CarAssistant = {
             
             const utterance = new SpeechSynthesisUtterance("Dodaj adres");
             utterance.lang = 'pl-PL';
-            utterance.rate = 1.1; // Nieco szybciej
+            utterance.rate = 0.88; // Zmieniono z 1.1 na 0.88 dla lepszego zrozumienia
+            utterance.pitch = 1.0;
             
             utterance.onend = () => {
                 // b) Po zakończeniu mowy uruchom mikrofon
@@ -2070,11 +2571,15 @@ window.SmartAssistant = {
         window.speechSynthesis.cancel();
         
         const noteText = customer.static_note ? `. Kod to ${customer.static_note}` : '';
-        const msg = `Jesteś u ${customer.name}${noteText}`;
+        const formattedAddress = window.formatAddressForSpeech(customer.address || "");
+        const msg = formattedAddress
+            ? `Jesteś u ${customer.name} przy adresie ${formattedAddress}${noteText}`
+            : `Jesteś u ${customer.name}${noteText}`;
         
         const utterance = new SpeechSynthesisUtterance(msg);
         utterance.lang = 'pl-PL';
-        utterance.rate = 1.1;
+        utterance.rate = 0.88;
+        utterance.pitch = 1.0;
         window.speechSynthesis.speak(utterance);
     },
 
@@ -2226,6 +2731,9 @@ window.addEventListener('DOMContentLoaded', () => {
     CarAssistant.init();
     // Inicjalizuj SmartAssistant
     SmartAssistant.init();
+    WakeLockManager.init();
+    if (window.initChargingIndicator) window.initChargingIndicator();
+    if (window.initCityAutocomplete) window.initCityAutocomplete();
 
     document.getElementById('setAiEnabled').checked = config.aiEnabled !== false;
     document.getElementById('setGeminiKey').value = config.geminiKey || "";
@@ -2253,19 +2761,32 @@ window.addEventListener('DOMContentLoaded', () => {
     // Bind GPS Button in Customer Modal
     document.getElementById('btnGpsCustomer')?.addEventListener('click', window.useCurrentGpsForCustomer);
     
-    // Auto-geocode on address blur in customer modal
-    document.getElementById('custAddress')?.addEventListener('blur', () => {
-         const addr = document.getElementById('custAddress').value;
-         if (addr && config.gpsEnabled && customerMap) {
-             window.geocodeAddress(addr).then(coords => {
-                 if (coords) {
-                     customerMap.setView([coords.lat, coords.lng], 16);
-                     if (customerMarker) customerMap.removeLayer(customerMarker);
-                     customerMarker = L.marker([coords.lat, coords.lng], { draggable: true }).addTo(customerMap);
-                 }
-             });
-         }
-    });
+    let customerAddressDebounce = null;
+    const custAddrInput = document.getElementById('custAddress');
+    const custCityInput = document.getElementById('custCity');
+    const triggerCustomerGeocode = () => {
+        const addr = custAddrInput ? custAddrInput.value.trim() : "";
+        if (!addr) return;
+        const cityVal = custCityInput && custCityInput.value.trim()
+            ? custCityInput.value.trim()
+            : (config.city || "");
+        if (customerAddressDebounce) clearTimeout(customerAddressDebounce);
+        customerAddressDebounce = setTimeout(() => {
+            window.geocodeAddress(addr, cityVal).then(coords => {
+                if (coords && customerMap) {
+                    customerMap.setView([coords.lat, coords.lng], 16);
+                    if (customerMarker) customerMap.removeLayer(customerMarker);
+                    customerMarker = L.marker([coords.lat, coords.lng], { draggable: true }).addTo(customerMap);
+                }
+            }).catch(e => console.error('Customer geocode error:', e));
+        }, 600);
+    };
+    if (custAddrInput) {
+        custAddrInput.addEventListener('input', triggerCustomerGeocode);
+    }
+    if (custCityInput) {
+        custCityInput.addEventListener('input', triggerCustomerGeocode);
+    }
     
     if (!config.city && navigator.geolocation) window.updateCityFromGps();
     if (config.wakeLockEnabled) window.toggleWakeLock(true);
@@ -2317,4 +2838,11 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tipInput')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') window.confirmTip();
     });
+    const myAreaInput = document.getElementById('myAreaInput');
+    if (myAreaInput) {
+        myAreaInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') window.addMyAreaStreet();
+        });
+    }
+    window.renderMyAreaStreets();
 });

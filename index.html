@@ -42,16 +42,20 @@
                         <p id="headerSubtitle" class="text-[10px] font-bold opacity-75 uppercase tracking-[0.2em] text-left">DPD Logistics</p>
                     </div>
                 </div>
-                <div class="flex flex-col items-end gap-2 text-right">
-                    <div class="flex items-center gap-1.5 justify-end">
-                        <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[10px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
-                            <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
-                            <span id="aiStatusLabel">AI: OK</span>
+                    <div class="flex flex-col items-end gap-2 text-right">
+                        <div class="flex items-center gap-1.5 justify-end">
+                            <div id="aiStatusBox" class="inline-flex items-center gap-1 text-[10px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
+                                <div id="aiDot" class="w-1.5 h-1.5 bg-green-500 rounded-full transition-colors"></div> 
+                                <span id="aiStatusLabel">AI: OK</span>
+                            </div>
+                            <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[10px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
+                                <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
+                            </div>
+                            <div id="chargeStatusBox" class="inline-flex items-center gap-1 text-[10px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
+                                <div id="chargeDot" class="w-1.5 h-1.5 bg-gray-500 rounded-full transition-colors"></div>
+                                <span id="chargeText">Ładowanie: BRAK DANYCH</span>
+                            </div>
                         </div>
-                        <div id="wakeStatusBox" class="inline-flex items-center gap-1 text-[10px] font-bold bg-black/20 px-2 py-1 rounded-full uppercase border border-white/10 shrink-0">
-                            <div id="wakeDot" class="w-1.5 h-1.5 bg-red-500 rounded-full transition-colors"></div> <span id="wakeText">Blokada: Wył</span>
-                        </div>
-                    </div>
                     <div class="flex gap-2 items-center justify-end">
                         <button id="toggleBtn" onclick="window.handleMapToggle()" class="inline-flex items-center gap-2 text-xs font-bold bg-white text-dpd-red px-3 py-1.5 h-9 rounded-full uppercase shadow-md active:scale-95 transition-all">
                             <i data-lucide="map" id="toggleIcon" class="w-3.5 h-3.5"></i> <span id="toggleText">Mapa</span>
@@ -71,6 +75,9 @@
                                 <button onclick="window.toggleView('aiSettings'); window.toggleMenu()" class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-gray-200">
                                     <i data-lucide="bot" class="w-4 h-4 text-gray-400"></i> Ustawienia AI
                                 </button>
+                                <button onclick="window.toggleView('myArea'); window.toggleMenu()" class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-gray-200">
+                                    <i data-lucide="map" class="w-4 h-4 text-gray-400"></i> Mój rejon
+                                </button>
                                 <button onclick="window.toggleView('customers'); window.toggleMenu()" class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-gray-200">
                                     <i data-lucide="users" class="w-4 h-4 text-gray-400"></i> Baza Klientów
                                 </button>
@@ -79,6 +86,9 @@
                                 </button>
                                 <button onclick="window.toggleView('history'); window.toggleMenu()" class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-gray-200">
                                     <i data-lucide="history" class="w-4 h-4 text-gray-400"></i> Historia
+                                </button>
+                                <button onclick="window.toggleView('routeAnalysis'); window.toggleMenu()" class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-gray-200">
+                                    <i data-lucide="route" class="w-4 h-4 text-gray-400"></i> Analiza Trasy
                                 </button>
                             </div>
                         </div>
@@ -152,7 +162,13 @@
             <div class="header-safe-area flex-none"></div>
             <div class="p-4 flex-none text-left">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Baza Klientów</h2>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl font-black uppercase tracking-tight text-left">Baza Klientów</h2>
+                        <button onclick="window.addNewCustomer()" class="px-4 py-2 bg-green-500 text-white rounded-xl active:scale-90 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span class="font-bold text-sm">DODAJ</span>
+                        </button>
+                    </div>
                     <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all text-left"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
                 <div class="relative mb-4">
@@ -192,12 +208,15 @@
                     </div>
                     <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
                         <label class="text-xs font-bold text-gray-500 block mb-1 uppercase text-left">Miasto Główne</label>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="setCity" placeholder="Np. Wrocław" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
-                            <button onclick="window.updateCityFromGps()" class="p-2 bg-gray-200 dark:bg-zinc-700 rounded-full active:scale-90"><i data-lucide="map-pin" class="w-4 h-4 text-dpd-red"></i></button>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="setCity" placeholder="Np. Wrocław" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                                <button onclick="window.updateCityFromGps()" class="p-2 bg-gray-200 dark:bg-zinc-700 rounded-full active:scale-90"><i data-lucide="map-pin" class="w-4 h-4 text-dpd-red"></i></button>
+                            </div>
+                            <div id="setCitySuggestions" class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-sm max-h-40 overflow-y-auto text-xs hidden"></div>
                         </div>
                     </div>
-                    
+
                     <label class="flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 text-left">
                         <span class="text-sm font-bold text-left">Używaj GPS</span>
                         <input type="checkbox" id="setGpsEnabled" onchange="window.applySettings()" class="w-5 h-5 accent-dpd-red">
@@ -314,6 +333,78 @@
             </div>
         </div>
 
+        <!-- Widok Mój Rejon -->
+        <div id="myAreaView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
+            <div class="header-safe-area flex-none"></div>
+            <div class="p-4 flex-none text-left">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Mój Rejon</h2>
+                    <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all text-left">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left space-y-4">
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                    <label class="text-xs font-bold text-gray-500 block mb-1 uppercase text-left">Ulice w moim rejonie</label>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="myAreaInput" placeholder="Np. Miodowa" class="flex-1 bg-transparent border-none text-sm font-bold focus:ring-0 outline-none p-0">
+                            <button id="myAreaAddBtn" onclick="window.addMyAreaStreet()" class="px-3 py-1.5 rounded-xl bg-dpd-red text-white text-xs font-black uppercase active:scale-95 transition-all">Dodaj</button>
+                        </div>
+                        <div id="myAreaList" class="space-y-2"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 space-y-3">
+                    <label class="text-xs font-bold text-gray-500 block mb-1 uppercase text-left">Kopia zapasowa rejonu</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="window.exportMyAreaBackup()" class="w-full bg-white dark:bg-zinc-900 text-dpd-red dark:text-red-400 p-3 rounded-2xl font-black uppercase text-[10px] border border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Eksport</span>
+                        </button>
+                        <button onclick="document.getElementById('myAreaImportInput').click()" class="w-full bg-white dark:bg-zinc-900 text-dpd-red dark:text-red-400 p-3 rounded-2xl font-black uppercase text-[10px] border border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            <span>Import</span>
+                        </button>
+                    </div>
+                    <input type="file" id="myAreaImportInput" accept=".json" style="display: none;" onchange="window.importMyAreaBackup(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Widok Analizy Trasy -->
+        <div id="routeAnalysisView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
+            <div class="header-safe-area flex-none"></div>
+            <div class="p-4 flex-none text-left">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tight text-left">Analiza Trasy</h2>
+                    <button onclick="window.toggleView('list')" class="p-3 bg-gray-100 dark:bg-zinc-800 rounded-full active:scale-90 transition-all text-left">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="window.runRouteAnalysis()" class="flex-1 bg-dpd-red text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg shadow-red-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Generuj Master Route
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 pt-0 pb-40 text-left space-y-4">
+                <div id="routeAnalysisStatus" class="hidden p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-xl text-xs font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>
+                    <span>Trwa analiza historii...</span>
+                </div>
+                
+                <div id="masterRouteContainer" class="space-y-3">
+                    <div class="text-center py-10 opacity-50">
+                        <i data-lucide="map" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                        <p class="text-xs font-bold">Brak wygenerowanej trasy.</p>
+                        <p class="text-[10px]">Kliknij przycisk powyżej, aby przeanalizować historię.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Widok Ustawień AI -->
         <div id="aiSettingsView" class="absolute inset-0 z-50 bg-white dark:bg-zinc-950 flex flex-col view-hidden text-left">
             <div class="header-safe-area flex-none"></div>
@@ -395,6 +486,11 @@
                 <div>
                     <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block text-left">Adres (Powiązanie)</label>
                     <input type="text" id="custAddress" class="w-full bg-gray-50 dark:bg-zinc-800 p-3 rounded-xl text-base font-bold border-none outline-none opacity-60" readonly>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block text-left">Miejscowość</label>
+                    <input type="text" id="custCity" placeholder="Np. Wrocław" class="w-full bg-gray-100 dark:bg-zinc-800 p-3 rounded-xl text-base font-bold border-2 border-transparent focus:border-dpd-red outline-none transition-colors">
                 </div>
 
                 <div>
@@ -500,6 +596,7 @@
     </div>
 
     <!-- Application Logic -->
+    <script src="js/route_analysis.js"></script>
     <script src="js/app.js"></script>
     
     <!-- Service Worker Registration -->
@@ -508,7 +605,13 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('SW registered!', reg))
-                    .catch(err => console.log('SW failed', err));
+                    .catch(err => {
+                        console.log('SW failed', err);
+                        // SecurityError is common on non-HTTPS/localhost
+                        if (err.name === 'SecurityError') {
+                            console.warn('Service Worker registration failed due to SecurityError. Ensure you are using HTTPS or localhost.');
+                        }
+                    });
             });
         }
         
