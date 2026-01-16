@@ -104,6 +104,7 @@ Aby korzystać z funkcji AI, przejdź do Ustawień AI i wybierz dostawcę:
 1. **Groq:** Wymaga klucza API (szybki, darmowy limit).
 2. **Gemini:** Wymaga klucza Google AI Studio.
 3. **OpenAI:** Wymaga płatnego klucza API.
+4. **Tryb parsowania głosowego:** AI służy głównie do wyciągania notatek i napiwków; adres jest parsowany lokalnie przez wewnętrzny algorytm, aby uniknąć zmiany numeru domu przez model.
 
 ## 🔒 Prywatność
 

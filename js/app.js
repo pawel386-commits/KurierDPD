@@ -1248,55 +1248,47 @@ window.handleVoiceResult = async function(text) {
         }
         window.setUIProcessing(false);
     }
-    if (aiData && aiData.address) {
-        // Upewnij się że tip jest liczbą (może być string z AI)
-        const tip = parseFloat(aiData.tip) || 0;
-        window.addEntry(aiData.address, aiData.note || "", aiData.type || 'delivery', tip);
-    } else {
-        // Fallback parsing bez AI
-        const low = text.toLowerCase();
-        const kw = (config.stopWord || "notatka").toLowerCase();
-        
-        // Szukaj słowa kluczowego "notatka" - musi być pełne słowo, nie część innego słowa
-        // Użyj regex aby znaleźć "notatka" jako oddzielne słowo
-        const kwRegex = new RegExp(`\\b${kw}\\b`, 'i');
-        const splitMatch = text.match(kwRegex);
-        const split = splitMatch ? splitMatch.index : -1;
-        
-        let type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
-        let addr = text;
-        let note = "";
-        
-        // Usuń słowa typu "odbiór" z adresu
-        if (type === 'pickup') {
-            addr = addr.replace(/\b(odbiór|odebrać)\b/gi, '').trim();
-        }
-        
-        // Podziel na adres i notatkę TYLKO jeśli znaleziono słowo kluczowe jako oddzielne słowo
-        if (split !== -1 && splitMatch) { 
-            addr = text.substring(0, split).trim(); 
-            note = text.substring(split + splitMatch[0].length).trim(); 
-        }
-        
-        // WAŻNE: Jeśli adres kończy się pojedynczą literą oddzieloną spacją (np. "21f/13 a"), 
-        // połącz ją z adresem (nie traktuj jako notatki)
-        // Wzorzec: spacja + pojedyncza litera na końcu adresu (po cyfrze lub ukośniku)
-        addr = addr.replace(/\s+([a-z])\s*$/i, '$1'); // "21f/13 a" -> "21f/13a", "21 a" -> "21a"
-        
-        // Formatuj adres (zachowując ukośniki i poprawiając format)
-        addr = window.formatPolishNumbers(addr);
-        
-        // Spróbuj wyodrębnić napiwek z notatki (fallback parsing)
-        let tip = 0;
-        const tipMatch = note.match(/(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/i);
-        if (tipMatch) {
-            tip = parseFloat(tipMatch[1].replace(',', '.')) || 0;
-            // Usuń informację o napiwku z notatki
-            note = note.replace(/(?:napiwek|dostałem|otrzymałem)\s*(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/gi, '').trim();
-        }
-        
-        window.addEntry(addr, note, type, tip);
+    
+    const low = text.toLowerCase();
+    const kw = (config.stopWord || "notatka").toLowerCase();
+    const kwRegex = new RegExp(`\\b${kw}\\b`, 'i');
+    const splitMatch = text.match(kwRegex);
+    const split = splitMatch ? splitMatch.index : -1;
+    
+    let type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
+    let addr = text;
+    let note = "";
+    
+    if (type === 'pickup') {
+        addr = addr.replace(/\b(odbiór|odebrać)\b/gi, '').trim();
     }
+    
+    if (split !== -1 && splitMatch) { 
+        addr = text.substring(0, split).trim(); 
+        note = text.substring(split + splitMatch[0].length).trim(); 
+    }
+    
+    addr = addr.replace(/\s+([a-z])\s*$/i, '$1');
+    addr = window.formatPolishNumbers(addr);
+    
+    let tip = 0;
+    const tipMatch = note.match(/(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/i);
+    if (tipMatch) {
+        tip = parseFloat(tipMatch[1].replace(',', '.')) || 0;
+        note = note.replace(/(?:napiwek|dostałem|otrzymałem)\s*(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/gi, '').trim();
+    }
+    
+    if (aiData) {
+        const aiTip = parseFloat(aiData.tip) || 0;
+        if (aiTip > 0) {
+            tip = aiTip;
+        }
+        if (aiData.note && typeof aiData.note === 'string' && aiData.note.trim().length > 0) {
+            note = note ? `${note} ${aiData.note}` : aiData.note;
+        }
+    }
+    
+    window.addEntry(addr, note, type, tip);
 };
 
 // Speech Recognition - cross-platform setup
