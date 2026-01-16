@@ -1251,13 +1251,38 @@ window.handleVoiceResult = async function(text) {
     let addr = text;
     let note = "";
     
-    if (type === 'pickup') {
-        addr = addr.replace(/\b(odbiór|odebrać)\b/gi, '').trim();
+    let splitIndex = split;
+    
+    if (splitIndex === -1) {
+        const softKeywords = [
+            'napiwek',
+            'zostawiono',
+            'zostawiona',
+            'zostaw',
+            'przy drzwiach',
+            'przy drzwiach',
+            'u sąsiada',
+            'u sąsiadki',
+            'u sąsiada pod',
+            'uwaga'
+        ];
+        let found = -1;
+        for (const kwSoft of softKeywords) {
+            const idx = low.indexOf(kwSoft);
+            if (idx !== -1 && (found === -1 || idx < found)) {
+                found = idx;
+            }
+        }
+        splitIndex = found;
     }
     
-    if (split !== -1 && splitMatch) { 
-        addr = text.substring(0, split).trim(); 
-        note = text.substring(split + splitMatch[0].length).trim(); 
+    if (splitIndex !== -1) {
+        addr = text.substring(0, splitIndex).trim();
+        note = text.substring(splitIndex).trim();
+    }
+    
+    if (type === 'pickup') {
+        addr = addr.replace(/\b(odbiór|odebrać)\b/gi, '').trim();
     }
     
     addr = addr.replace(/\s+([a-z])\s*$/i, '$1');
