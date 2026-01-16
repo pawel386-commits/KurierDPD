@@ -946,6 +946,17 @@ window.formatPolishNumbers = function(text) {
     t = t.replace(/(\d+)\s+naście\b/gi, (m, g1) => (parseInt(g1) + 10).toString());
     t = t.replace(/(\d+)\s+dziesiąt\b/gi, (m, g1) => (parseInt(g1) * 10).toString());
     
+    // 3.5. [iOS Fix] Sklejanie i normalizacja liter przy numerach PRZED obsługą "przez"
+    if (platform && platform.isIOS) {
+        const iosCharMap = { 'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z' };
+        // Zamień polskie litery po cyfrach na łacińskie (np. "13 ą" -> "13a")
+        t = t.replace(/(\d+)\s*([ąęćłńóśźżĄĘĆŁŃÓŚŹŻ])/gi, (m, n, c) => {
+             return n + (iosCharMap[c.toLowerCase()] || c);
+        });
+    }
+    // Sklej cyfry z literami (np. "131 b" -> "131b")
+    t = t.replace(/(\d+)\s+([a-zA-Z])\b/gi, '$1$2');
+    
     // 4. Najpierw zamień słowa "przez", "na", "łamane" na ukośniki
     // "21a przez 3" -> "21a/3", "21 na 3" -> "21/3"
     t = t.replace(/(\d+[a-z]?)\s+(przez|na|łamane|łamane\s+na)\s+(\d+[a-z]?)/gi, '$1/$3');
@@ -990,25 +1001,6 @@ window.formatPolishNumbers = function(text) {
     // 8. Przywróć wielką literę na początku (dla nazw ulic)
     if (t.length > 0) {
         t = t.charAt(0).toUpperCase() + t.slice(1);
-    }
-    if (platform && platform.isIOS && t.length > 0) {
-        const last = t.charAt(t.length - 1);
-        const iosLastMap = {
-            'ą': 'A',
-            'ć': 'C',
-            'ę': 'E',
-            'ł': 'L',
-            'ń': 'N',
-            'ó': 'O',
-            'ś': 'S',
-            'ź': 'Z',
-            'ż': 'Z'
-        };
-        const key = last.toLowerCase();
-        if (iosLastMap[key]) {
-            t = t.slice(0, -1) + iosLastMap[key];
-        }
-        t = t.replace(/(\d+)\s+([a-zA-Z])\b/g, '$1$2');
     }
     
     return t.trim();
