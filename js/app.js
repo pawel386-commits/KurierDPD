@@ -1250,6 +1250,7 @@ window.handleVoiceResult = async function(text) {
     let type = (low.includes('odbiór') || low.includes('odebrać')) ? 'pickup' : 'delivery';
     let addr = text;
     let note = "";
+    let rawNote = "";
     
     let splitIndex = split;
     
@@ -1259,7 +1260,6 @@ window.handleVoiceResult = async function(text) {
             'zostawiono',
             'zostawiona',
             'zostaw',
-            'przy drzwiach',
             'przy drzwiach',
             'u sąsiada',
             'u sąsiadki',
@@ -1278,7 +1278,7 @@ window.handleVoiceResult = async function(text) {
     
     if (splitIndex !== -1) {
         addr = text.substring(0, splitIndex).trim();
-        note = text.substring(splitIndex).trim();
+        rawNote = text.substring(splitIndex).trim();
     }
     
     if (type === 'pickup') {
@@ -1289,19 +1289,22 @@ window.handleVoiceResult = async function(text) {
     addr = window.formatPolishNumbers(addr);
     
     let tip = 0;
-    const tipMatch = note.match(/(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/i);
-    if (tipMatch) {
-        tip = parseFloat(tipMatch[1].replace(',', '.')) || 0;
-        note = note.replace(/(?:napiwek|dostałem|otrzymałem)\s*(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/gi, '').trim();
-    }
     
-    if (aiData) {
+    if (!aiData) {
+        let localNote = rawNote;
+        const tipMatch = localNote.match(/(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/i);
+        if (tipMatch) {
+            tip = parseFloat(tipMatch[1].replace(',', '.')) || 0;
+            localNote = localNote.replace(/(?:napiwek|dostałem|otrzymałem)\s*(\d+(?:[.,]\d+)?)\s*(?:zł|zloty|zlotych|złotych|pln)/gi, '').trim();
+        }
+        note = localNote;
+    } else {
         const aiTip = parseFloat(aiData.tip) || 0;
         if (aiTip > 0) {
             tip = aiTip;
         }
         if (aiData.note && typeof aiData.note === 'string' && aiData.note.trim().length > 0) {
-            note = note ? `${note} ${aiData.note}` : aiData.note;
+            note = aiData.note.trim();
         }
     }
     
